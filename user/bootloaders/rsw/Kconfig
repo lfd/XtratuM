@@ -1,0 +1,9 @@
+config STACK_SIZE
+       int "Stack size (KB)"
+       default 8
+
+config XEF_SUPPORT
+       bool "XEF support"
+       default y
+
+source "../../../core/Kconfig.ver"

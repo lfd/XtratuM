@@ -1,0 +1,55 @@
+#!/bin/bash
+# Author: Miguel Masmano <mmasmano@ai2.upv.es>
+# WARNING: preprocesed file see user/tools/build_xmc
+
+dirname=$(dirname $0)
+progname=$(basename $0)
+XTRATUM_PATH=$(echo $dirname | sed 's|/user/bin$||')
+
+function warn(){ echo -e $* 1>&2; }
+function usage(){ echo "usage: build_xmc <xmc.c> <output_file>"; }
+
+if test $# -ne 2; then
+	warn `usage`
+	exit 1;
+fi
+
+if ! test -e $1; then
+	warn `usage`
+	warn $progname: "error: file $XMC not found"
+	exit 1
+fi
+
+XMC=$1
+OFILE=$2
+
+# provide xtratum build report
+echo
+echo $progname XtratuM $XTRATUMVERSION 
+
+cat > tmp.lds <<EOF
+OUTPUT_FORMAT("binary")
+SECTIONS
+{
+    	. = 0x0;
+    	.data ALIGN (4) : {
+    		*(.rodata.hdr)
+    		*(.rodata)
+    		*(.data)
+    		*(.bss)
+    	}
+    	_xmcSize = .;
+
+ 	/DISCARD/ : {
+	   	*(.text)
+    		*(.note)
+	    	*(.comment*)
+	}
+}
+EOF
+
+$CC -x c $CFLAGS $XMC -o $OFILE -Wl,-Ttmp.lds
+rm -f tmp.lds
+
+chmod -x $OFILE
+

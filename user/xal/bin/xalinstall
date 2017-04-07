@@ -1,0 +1,148 @@
+#!/bin/bash
+# Author: Salva Peiro <speiro@ai2.upv.es>
+# Updated: Javier Coronel <jacopa@ai2.upv.es>
+
+XAL=\
+(
+	# user/xal
+	user/xal/bin
+	user/xal/bin/xpath
+	user/xal/bin/xpathstart
+	user/xal/bin/grub_iso
+
+	user/xal/include
+	user/xal/include/*.h
+	user/xal/include/arch
+	user/xal/include/arch/*.h
+
+	user/xal/lib/
+	user/xal/lib/loader.lds
+	user/xal/lib/libxal.a
+
+	user/xal/common
+	user/xal/common/rules.mk
+	user/xal/common/config.mk.dist
+
+	user/xal/examples
+	user/xal/examples/Makefile
+
+	user/xal/examples/l0x1-hello_world/{.,Makefile,xm_cf.*.xml,*.c}
+	user/xal/examples/l2x0-2linux/{.,README,Makefile,xm_cf.*.xml,cmdline*.txt}
+	user/xal/examples/l3x0-3linux/{.,README,Makefile,xm_cf.*.xml,cmdline*.txt}
+	user/xal/examples/l0x3-hmmonitor/{.,README,Makefile,xm_cf.*.xml,*.c,*.h}
+)
+
+progname=$(basename $0)
+function warn() { echo -e $* 1>&2; }
+function eprint() { warn $progname: $*; exit 1; }
+function usage(){ eprint "usage: $progname [-dc] -t <target_dir>"; }
+
+function install(){
+	if $drflag; then
+		for i in $*; do test -f "$i" && echo $i; done
+	else
+		$(which install) $* # -v
+	fi
+}
+
+# parse options
+args=`getopt -n $prog -o igchdt: -- "$@"`
+if test $? != 0; then
+		usage
+		exit 1
+fi
+
+opmode=install	# operation: install, sha1sum, sha1check
+drflag=false	# dry run
+sha1file=sha1sum.txt
+targetdir=
+
+set -- $(eval echo "$args")
+for i in $*
+do
+	case "$i" in
+	-i)	shift; opmode=install;;
+	-g)	shift; opmode=sha1sum;;
+	-c)	shift; opmode=sha1check;;
+
+	-h)	shift; usage; exit;;
+	-d)	shift; drflag=true;;
+	-t)
+		shift
+		targetdir="$1"; shift
+		;;
+	--)	shift;;
+	esac
+done
+
+if test -z "$targetdir"; then
+	warn option -t targetdir required
+	usage
+fi
+
+case "$opmode" in
+install)
+	# fall through
+	;;
+
+sha1sum)
+	(
+	cd $targetdir;
+	rm -f $sha1file && sha1sum -b `find -type f` > $sha1file;
+	chmod 400 $sha1file
+	)
+	exit
+	;;
+
+sha1check)
+	if ! test -r $targetdir/$sha1file; then
+		echo "XtratuM integrity NOT verified: \"$targetdir/$sha1file\" not found"
+		exit
+	else
+		if (cd $targetdir; sha1sum -c $sha1file >/dev/null); then
+			echo "XtratuM integrity verified using \"$targetdir/$sha1file\""
+			exit
+		else
+			echo XtratuM integrity corrupted: sha1sum missmatch:
+			(cd $targetdir; sha1sum -c $sha1file) | grep -v OK
+			exit -1
+		fi
+	fi
+	;;
+
+*)
+	usage
+	exit -1
+	;;	
+esac
+
+# installation
+
+if test -z "$ARCH"; then
+	eprint '$ARCH variable does not exist'
+fi
+
+if test -e $targetdir; then
+	eprint error: target dir $targetdir already exists
+fi
+
+# installation
+
+install -m 755 -d $targetdir/user/xal
+for e in ${XAL[@]}; do
+	if test -d $e; then
+		install -m 755 -d $targetdir/$e
+	elif test -x $e; then
+		install -m 755 $e $targetdir/$e
+	else
+		install -m 644 $e $targetdir/$e
+	fi
+done
+
+# rearrangement
+
+mv $targetdir/user/xal/* $targetdir/
+rm -r $targetdir/user
+
+cp $targetdir/common/config.mk.dist $targetdir/common/config.mk
+chmod u+w $targetdir/common/config.mk

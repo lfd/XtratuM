@@ -1,0 +1,32 @@
+=head2 C<l3x0-3linux>: XtratuM system with three Linux partitions.
+
+I<This example explains how to build a system composed by three Linux partitions.>
+
+Builds a partitioned system composed by three partitions running a Linux
+kernel.  The first partition gets the root file-system from the
+I</dev/sda1>, while the remaining guest partitions partition get the
+root file-system from an C<initramfs>.
+
+=head3 Partition definition:
+
+Three independent partitions with the same Linux kernel code are built.
+
+=head3 Configuration table:
+
+Basic configuration. Partitions are defined to be executed at different memory addresses.
+P1, P2 and P3 are  defined as supervisor partitions.
+
+A scheduling plan is defined under the following premises:
+
+    MAF = 8 msec
+    P1: S   0 ms  D 2 ms
+    P2: S   2 ms  D 2 ms
+    P1: S   4 ms  D 2 ms
+    P3: S   6 ms  D 8 ms
+
+=head3 Expected results:
+
+XtratuM will load, initialise and run in user mode the Linux partitions.
+During the execution, the Linux aprtitions will boot and run start a C</sbin/init>
+provided inside a basic initramfs filesystem which will start a busybox shell.
+

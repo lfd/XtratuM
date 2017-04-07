@@ -1,0 +1,13 @@
+#
+# Automatically generated make config: don't edit
+# XM version: 2.3.0
+# Thu Jan 19 18:05:11 2012
+#
+CONFIG_ARCH="ia32"
+CONFIG_KERNELVERSION="2.3.0"
+# CONFIG_DEBUG is not set
+
+#
+# Kernel options
+#
+CONFIG_STACK_KB=8

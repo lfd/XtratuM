@@ -1,0 +1,147 @@
+#!/bin/bash
+
+LINUX_FILES=\
+(
+	user/linux/loader
+	user/linux/loader/Makefile
+	user/linux/loader/lib/
+	user/linux/loader/lib/loader.lds
+	user/linux/loader/lib/liblinuxloader.a
+
+    `[ -e user/linux/loader/linuxloader-server ] && echo user/linux/loader/linuxloader-server`
+    `[ -e user/linux/loader/linuxloader-client ] && echo user/linux/loader/linuxloader-client`
+
+    user/linux/bin
+    user/linux/bin/mkinitramfs
+    user/linux/bin/xmmanager
+
+    user/linux/initrd-root
+    user/linux/initrd-root/init
+    user/linux/initrd-root/xminit
+
+    user/linux/initrd-root/bin
+#   user/linux/initrd-root/bin/sh
+    user/linux/initrd-root/bin/busybox
+    user/linux/initrd-root/sys
+    user/linux/initrd-root/sbin
+    user/linux/initrd-root/proc
+    user/linux/initrd-root/etc
+    user/linux/initrd-root/etc/inittab
+    user/linux/initrd-root/etc/profile
+    user/linux/initrd-root/etc/mdev.conf
+    user/linux/initrd-root/etc/init.d
+    user/linux/initrd-root/etc/init.d/rcS
+
+    user/linux/libxm-linux/
+    user/linux/libxm-linux/README
+    user/linux/libxm-linux/libxm-linux.a
+    user/linux/libxm-linux/common/
+    user/linux/libxm-linux/common/rules.mk
+    user/linux/libxm-linux/common/config.mk.dist
+    user/linux/libxm-linux/include/
+    user/linux/libxm-linux/include/xm-linux.h
+
+    user/linux/libxm-linux/examples/
+    user/linux/libxm-linux/examples/Makefile
+    user/linux/libxm-linux/examples/hello.c
+    user/linux/libxm-linux/examples/gettime.c
+    user/linux/libxm-linux/examples/part_manager.c
+)
+
+progname=$(basename $0)
+function warn() { echo -e $* 1>&2; }
+function eprint() { warn $progname: $*; exit 1; }
+function usage(){ eprint "usage: $progname [-dc] -t <target_dir>"; }
+
+# parse options
+args=`getopt -n $prog -o igchdt: -- "$@"`
+if test $? != 0; then
+		usage
+		exit 1
+fi
+
+opmode=install	# operation: install, sha1sum, sha1check
+drflag=false	# dry run
+sha1file=sha1sum.txt
+targetdir=
+
+set -- $(eval echo "$args")
+for i in $*
+do
+	case "$i" in
+	-i)	shift; opmode=install;;
+	-g)	shift; opmode=sha1sum;;
+	-c)	shift; opmode=sha1check;;
+
+	-h)	shift; usage; exit;;
+	-d)	shift; drflag=true;;
+	-t)
+		shift
+		targetdir="$1"; shift
+		;;
+	--)	shift;;
+	esac
+done
+
+case "$opmode" in
+install)
+	# fall through
+	;;
+
+sha1sum)
+	(
+	cd $targetdir;
+	rm -f $sha1file && sha1sum -b `find -type f` > $sha1file;
+	chmod 400 $sha1file
+	)
+	exit
+	;;
+
+sha1check)
+	if ! test -r $targetdir/$sha1file; then
+		echo "XtratuM integrity NOT verified: \"$targetdir/$sha1file\" not found"
+		exit
+	else
+		if (cd $targetdir; sha1sum -c $sha1file >/dev/null); then
+			echo "XtratuM integrity verified using \"$targetdir/$sha1file\""
+			exit
+		else
+			echo XtratuM integrity corrupted: sha1sum missmatch:
+			(cd $targetdir; sha1sum -c $sha1file) | grep -v OK
+			exit -1
+		fi
+	fi
+	;;
+
+*)
+	usage
+	exit -1
+	;;	
+esac
+
+if test -z "$targetdir"; then
+	warn option -t targetdir required
+	usage
+fi
+
+if test -e $targetdir; then
+	eprint error: target dir $targetdir already exists
+fi
+
+install -m 755 -d $targetdir/user/linux
+for e in ${LINUX_FILES[@]}; do
+	if test -d $e; then
+		install -m 755 -d $targetdir/$e
+	elif test -x $e; then
+		install -m 755 $e $targetdir/$e
+	else
+		install -m 644 $e $targetdir/$e
+	fi
+done
+(cd $targetdir/user/linux/initrd-root/bin && rm -f sh && ln -s busybox sh)
+
+mv $targetdir/user/linux/* $targetdir/
+sed -i "s|^LINUXLOADER_PATH[ ]*=.*|LINUXLOADER_PATH=\$(XTRATUM_PATH)/../linux/loader|" $targetdir/loader/Makefile
+sed -i "s|^LIBXM_PATH[ ]*=.*|LIBXM_PATH=\$(XTRATUM_PATH)/|" $targetdir/libxm-linux/common/rules.mk
+
+rm -r $targetdir/user

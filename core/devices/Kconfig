@@ -1,0 +1,16 @@
+menu "Devices"
+
+config DEV_PC_VGA
+       bool "Enable VGA support"
+       depends on PC_BOARD
+       default y
+
+config DEV_PC_UART
+       bool "Enable UART support"
+       depends on PC_BOARD
+       default y
+
+config DEV_MEMBLOCK
+       def_bool y
+
+endmenu

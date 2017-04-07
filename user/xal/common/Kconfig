@@ -1,0 +1,11 @@
+source "../../core/Kconfig.ver"
+
+config DEBUG
+       bool "Debug"
+       default n
+
+menu "Kernel options"
+config STACK_KB
+       int "Stack size (KB)"
+       default "8"
+endmenu

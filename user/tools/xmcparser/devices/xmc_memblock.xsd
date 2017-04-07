@@ -1,0 +1,17 @@
+<xs:schema targetNamespace="http://www.xtratum.org/xm-2.3" 
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns="http://www.xtratum.org/xm-2.3"
+	   elementFormDefault="qualified" 
+	   attributeFormDefault="unqualified">
+     <xs:complexType name="memBlock_element">
+	<xs:sequence minOccurs="1" maxOccurs="unbounded">
+          <xs:element name="Block">
+	    <xs:complexType>
+              <xs:attribute name="name" type="idString_t" use="required"/>
+              <xs:attribute name="start" type="hex_t" use="required"/>
+              <xs:attribute name="size" type="sizeUnit_t" use="required"/>
+	    </xs:complexType>
+	</xs:element>
+      </xs:sequence> 
+   </xs:complexType>
+</xs:schema>

@@ -1,0 +1,28 @@
+=head2 C<l0x1-hello_world>: A bare "Hello World" partition.
+
+I<This example explains how to build a "Hello world" partition using the XAL layer.>
+
+=head3 Partition definition:
+
+This example is composed of one XAL bare partition that prints "Hello World!"
+to the partition console device configured in the file C<xm_cf.ia32.xml>.
+The code run by the partition can be found in the file C<hello.c>.
+
+Termination: After printing "Hello World!" the partition terminates (Halt partition). 
+
+=head3 Configuration table:
+
+Basic configuration.
+Partitions are defined to be executed at different memory addresses.
+P1 is defined as supervisor.
+
+A scheduling plan is defined under the following premises:
+
+    MAF = 1000 msec
+    P1: S   0 ms  D 500 ms  
+
+=head3 Expected results:
+
+XtratuM will load, initialise and run in user mode the partitions. 
+During the execution, partitions will print "Hello World!" and halt.
+

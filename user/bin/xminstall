@@ -1,0 +1,240 @@
+#!/bin/bash
+# Author: Miguel Masmano <mmasmano@ai2.upv.es>
+# updated by Salva Peiro <speiro@ai2.upv.es>
+
+CONFIG=\
+(
+	# dirs
+	core
+	user/bootloaders/rsw
+
+	# files
+#	README
+	xmconfig
+	version
+	config.mk
+	user/rules.mk
+
+	core/.config
+	user/bootloaders/rsw/.config
+)
+
+BIN_APPS=\
+(
+	# binaries (strip)
+	user/bin/elf2xef
+	user/bin/xmpack
+	user/bin/xmcparser
+
+	# scripts
+	user/bin/rswbuild
+	user/bin/build_xmc
+)
+
+XSD_FILES=\
+(
+	# dirs
+	user/tools/xmcparser
+	user/tools/xmcparser/devices
+	user/tools/xmcparser/$ARCH
+
+	# files
+	user/tools/xmcparser/xmc.xsd
+	user/tools/xmcparser/devices/*.xsd
+	user/tools/xmcparser/$ARCH/*.xsd
+)
+
+XM_LIBS=\
+(
+	# dirs
+	user/libxm
+	user/bootloaders/rsw/$ARCH
+
+	# files
+	core/xm_core.bin
+
+	user/libxm/libxm.a
+	user/bootloaders/rsw/rsw_objs.o
+	user/bootloaders/rsw/$ARCH/rsw.lds
+)
+
+
+LIBXM_PATH=user/libxm
+INCLUDE_FILES=\
+(
+	# dirs
+	user/libxm/include
+	user/libxm/include/arch
+	user/libxm/include/xm_inc/arch
+	user/libxm/include/xm_inc/objects
+	#user/libxm/include/xm_inc/devices
+
+	# files
+	user/libxm/include/xm.h
+	user/libxm/include/xmports.h
+	user/libxm/include/xm_inc/config.h
+	user/libxm/include/xm_inc/guest.h
+	user/libxm/include/xm_inc/arch/asm_offsets.h
+
+	`case "$ARCH" in 
+	sparcv8)
+cat <<EOF
+	user/libxm/include/$ARCH/xm.h 
+EOF
+	;;
+
+	ia32)
+cat <<EOF
+	user/libxm/include/xm_inc/arch/physmm.h
+EOF
+	;;
+	esac`
+	
+	`(cd ${XTRATUM_PATH:-.};
+	 echo '#include <xm.h>' | gcc -O2 -x c -I $LIBXM_PATH/include -M -) |
+		 sed -n '2,$ {s|[^h]$||; p}'`
+)
+
+progname=$(basename $0)
+function warn() { echo -e $* 1>&2; }
+function eprint() { warn $progname: $*; exit 1; }
+function usage(){ eprint "usage: $progname [-dc] -t <target_dir>"; }
+
+function install(){
+	if $drflag; then
+		for i in $*; do test -f "$i" && echo $i; done
+	else
+		$(which install) $* # -v
+	fi
+}
+
+# parse options
+args=`getopt -n $prog -o igchdt: -- "$@"`
+if test $? != 0; then
+		usage
+		exit 1
+fi
+
+opmode=install	# operation: install, sha1sum, sha1check
+drflag=false	# dry run
+sha1file=sha1sum.txt
+targetdir=
+
+set -- $(eval echo "$args")
+for i in $*
+do
+	case "$i" in
+	-i)	shift; opmode=install;;
+	-g)	shift; opmode=sha1sum;;
+	-c)	shift; opmode=sha1check;;
+
+	-h)	shift; usage; exit;;
+	-d)	shift; drflag=true;;
+	-t)
+		shift
+		targetdir="$1"; shift
+		;;
+	--)	shift;;
+	esac
+done
+
+if test -z "$targetdir"; then
+	warn option -t targetdir required
+	usage
+fi
+
+case "$opmode" in
+install)
+	# fall through
+	;;
+
+sha1sum)
+	(
+	cd $targetdir;
+	rm -f $sha1file && sha1sum -b `find -type f` > $sha1file;
+	chmod 400 $sha1file
+	)
+	exit
+	;;
+
+sha1check)
+	if ! test -r $targetdir/$sha1file; then
+		echo "XtratuM integrity NOT verified: \"$targetdir/$sha1file\" not found"
+		exit
+	else
+		if (cd $targetdir; sha1sum -c $sha1file >/dev/null); then
+			echo "XtratuM integrity verified using \"$targetdir/$sha1file\""
+			exit
+		else
+			echo XtratuM integrity corrupted: sha1sum missmatch:
+			(cd $targetdir; sha1sum -c $sha1file) | grep -v OK
+			exit -1
+		fi
+	fi
+	;;
+
+*)
+	usage
+	exit -1
+	;;	
+esac
+
+# installation
+
+if test -z "$XTRATUM_PATH"; then
+	eprint '$XTRATUM_PATH variable does not exist'
+fi
+
+if test -z "$ARCH"; then
+	eprint '$ARCH variable does not exist'
+fi
+
+if test -z "$XTRATUMVERSION"; then
+	eprint '$XTRATUMVERSION variable does not exist'
+fi
+
+if test -e $targetdir; then
+	eprint error: target dir $targetdir already exists
+fi
+
+install -m 755 -d $targetdir/user/bin
+for e in ${BIN_APPS[@]}; do
+	if file -i $e | grep -q 'x-executable'; then
+		install -s -m 755 $e $targetdir/$e
+	else
+		install -m 755 $e $targetdir/$e
+	fi
+done
+
+for e in ${CONFIG[@]} ${XM_LIBS[@]} ${XSD_FILES[@]} ${INCLUDE_FILES[@]}; do
+	if test -d $e; then
+		install -m 755 -d $targetdir/$e
+	else
+		install -m 644 $e $targetdir/$e
+	fi
+done
+
+sed -i "s|XTRATUM_PATH[ ]*=.*|XTRATUM_PATH=$targetdir|" $targetdir/xmconfig
+
+# rearrangement
+mv $targetdir/user/bin $targetdir
+sed -i '/^XTRATUM_PATH=/ s|/user/bin|/bin|' $targetdir/bin/rswbuild
+sed -i '/XTRATUM_PATH\/user\/bin\/xmcparser/ s|/user/bin|/bin|' $targetdir/bin/rswbuild
+
+mv $targetdir/core/xm_core.bin $targetdir/core/.config $targetdir/user
+rm -r $targetdir/core
+sed -i 's|core/.config|user/.config|g' $targetdir/config.mk
+sed -i '/xm_core.bin/ s|/core/|/user/|' $targetdir/bin/rswbuild
+sed -i '/gcc -x/ s|-I'$XTRATUM_PATH'/user/libxm|-I$XTRATUM_PATH|' $targetdir/bin/build_xmc
+sed -i '/^XTRATUM_PATH/ s|user/bin|bin|' $targetdir/bin/build_xmc
+
+mv $targetdir/user/libxm/include $targetdir
+sed -i '/$(LIBXM_PATH)\/include/ s|$(LIBXM_PATH)/include|$(XTRATUM_PATH)/include|g' $targetdir/user/rules.mk
+
+mv $targetdir/user/libxm/libxm.a $targetdir/user
+rm -r $targetdir/user/libxm
+sed -i '/LIBXM_PATH=/ s|user/libxm|user|g' $targetdir/user/rules.mk
+sed -i '/user\/libxm\/libxm.a/ s|/user/libxm/|/user/|' $targetdir/bin/rswbuild
+
+(cd $targetdir; ln -s user lib)
+#rm -r $targetdir/user

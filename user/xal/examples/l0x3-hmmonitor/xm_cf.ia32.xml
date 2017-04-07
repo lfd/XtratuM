@@ -1,0 +1,62 @@
+<!-- <track id="hm-monitor-xmcf"> -->
+<SystemDescription xmlns="http://www.xtratum.org/xm-2.3" version="1.0.0" name="hm-monitor">
+  <XMHypervisor console="PcUart" loadPhysAddr="0x100000" healthMonitoringDevice="MemDisk0">
+    <PhysicalMemoryAreas>
+      <Area start="0x00100000" size="2MB"/>
+    </PhysicalMemoryAreas>
+    <Trace device="MemDisk1" bitmask="0x3"/>
+    <HwDescription>
+      <Processor id="0">
+        <Sched><CyclicPlanTable>
+            <Plan id="0" majorFrame="4s">
+              <Slot id="0" start="0ms" duration="1000ms" partitionId="0"/>
+              <Slot id="1" start="1000ms" duration="500ms" partitionId="1"/>
+              <Slot id="2" start="1500ms" duration="500ms" partitionId="2"/>
+            </Plan>
+        </CyclicPlanTable></Sched>
+      </Processor>
+      <MemoryLayout>
+        <Region type="ram" start="0x0" size="32MB"/>
+      </MemoryLayout>
+    </HwDescription>
+   </XMHypervisor>
+  <PartitionTable>
+    <Partition id="0" name="Partition1" processor="0" flags="boot sv" loadPhysAddr="0x800000" headerOffset="0x0" imageId="0x0" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x800000" size="256KB" flags="mapped write"/>
+        <Area start="0x10C0000" size="256KB" flags="shared mapped"/>
+        <Area start="0x1100000" size="256KB" flags="shared mapped"/>
+      </PhysicalMemoryAreas>
+      <Trace device="MemDisk2" bitmask="0x3"/>
+    </Partition>
+    <Partition id="1" name="Partition2" processor="0" flags="boot sv" loadPhysAddr="0x840000" headerOffset="0x0" imageId="0x1" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x840000" size="256KB" flags="mapped write"/>
+        <Area start="0x10C0000" size="256KB" flags="shared mapped write"/>
+      </PhysicalMemoryAreas>
+      <Trace device="MemDisk3" bitmask="0x3"/>
+      <HealthMonitoring>
+        <Event name="XM_HM_EV_PARTITION_ERROR" action="XM_HM_AC_HALT" log="yes" />
+      </HealthMonitoring>
+    </Partition>
+    <Partition id="2" name="Partition3" processor="0" flags="boot sv" loadPhysAddr="0x880000" headerOffset="0x0" imageId="0x2" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x880000" size="256KB" flags="mapped write"/>
+        <Area start="0x1100000" size="256KB" flags="shared mapped write"/>
+      </PhysicalMemoryAreas>
+      <Trace device="MemDisk4" bitmask="0x3"/>
+    </Partition>
+    </PartitionTable>
+  <Devices>
+    <PcVga name="PcVga"/>
+    <PcUart name="PcUart"/>
+    <MemoryBlockTable>
+      <Block name="MemDisk0" start="0x1000000" size="256KB"/>
+      <Block name="MemDisk1" start="0x1040000" size="256KB"/>
+      <Block name="MemDisk2" start="0x1080000" size="256KB"/>
+      <Block name="MemDisk3" start="0x10C0000" size="256KB"/>
+      <Block name="MemDisk4" start="0x1100000" size="256KB"/>
+    </MemoryBlockTable>
+  </Devices>
+</SystemDescription>
+<!-- </track id="hm-monitor-xmcf"> -->

@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use sigtrap; 
+use diagnostics;
+
+use File::Basename;
+use Cwd 'abs_path';
+my ($progName, $progDir) = fileparse (abs_path($0));
+
+sub usage{
+    my $exit=@_;
+    warn "usage: mkinitramfs init|build <initrdfile> <rootdir>\n";
+    if($exit){
+        exit $exit;
+    }
+}
+
+sub runcmd{
+    my ($cmd, $msg) = @_;
+    if(system($cmd)){
+        die "$msg";
+    }
+}
+
+my $command=$ARGV[0];
+if(not $command){
+    warn "Error: missing init|build\n";
+    usage(-1);
+}
+
+my $initrdfile=$ARGV[1];
+if ($initrdfile){
+    $initrdfile=abs_path($initrdfile);
+}else{
+    warn "Error: missing initrdfile\n";
+    usage(-1);
+}
+
+my $rootdir=$ARGV[2];
+if ($rootdir){
+    $rootdir=abs_path($rootdir);
+}else{
+    warn "Error: missing rootdir\n";
+    usage(-1);
+}
+
+print "$progName $command ".basename($initrdfile).": ...";
+
+my ($cmd, $msg);
+if($command eq "init"){ 
+    my $baseroot="$progDir/../initrd-root";
+    if(not -d $baseroot){
+        warn "Error: baseroot dir: $baseroot not found\n";
+        usage(-1);
+    }
+
+    $cmd="rm -rf $rootdir; mkdir -p $rootdir/bin";
+    $msg="Error: creating $rootdir: $!\n";
+    runcmd($cmd, $msg);
+
+    $cmd="cp -r $baseroot/* $rootdir";
+    $msg="Error: copying dir $baseroot: $!\n";
+    runcmd($cmd, $msg);
+} elsif($command eq "build"){
+    $cmd="(cd $rootdir; find . -not -path '*svn*' | cpio -H newc -o)  > $initrdfile.cpio 2>/dev/null";
+    $msg="Error: building cpio file: $!\n";
+    runcmd($cmd, $msg);
+
+    $cmd="gzip $initrdfile.cpio -c > $initrdfile.gz";
+    $msg="Error: compressing the cpio file: $!\n";
+    runcmd($cmd, $msg);
+
+    $cmd="rm -r $initrdfile.cpio; rm -rf $rootdir";
+    $msg="Error: cleaning the cpio and $rootdir: $!\n";
+    runcmd($cmd, $msg);
+} else {
+    warn "Error: invalid command\n";
+    usage(-1)
+}
+
+print "\r$progName $command ".basename($initrdfile).": Done\n";

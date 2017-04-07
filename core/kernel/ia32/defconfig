@@ -1,0 +1,54 @@
+#
+# Automatically generated make config: don't edit
+# XM version: 2.3.0
+# Thu May 17 10:21:43 2012
+#
+CONFIG_IA32=y
+CONFIG_TSC=y
+CONFIG_MMU=y
+CONFIG_NO_HWIRQS=16
+CONFIG_TARGET_LITTLE_ENDIAN=y
+CONFIG_XM_OFFSET=0xFC000000
+
+#
+# Processor
+#
+CONFIG_PC_BOARD=y
+CONFIG_NO_CPUS=1
+# CONFIG_UP_APIC is not set
+
+#
+# Hypervisor arch-dependent parameters
+#
+CONFIG_PARTITION_NO_GDT_ENTRIES=60
+CONFIG_PIT=y
+# CONFIG_HPET is not set
+CONFIG_DEBUG=y
+# CONFIG_NO_GCC_OPT is not set
+CONFIG_ID_STRING_LENGTH=16
+
+#
+# Hypervisor parameters
+#
+CONFIG_EARLY_KOUTPUT=y
+CONFIG_SPARE_SCHEDULING=y
+CONFIG_MAX_SPARE_SLOTS=20
+
+#
+# Partition parameters
+#
+CONFIG_KSTACK_KB=8
+CONFIG_ARCH="ia32"
+CONFIG_KERNELVERSION="2.3.0"
+
+#
+# Devices
+#
+CONFIG_DEV_PC_VGA=y
+CONFIG_DEV_PC_UART=y
+CONFIG_DEV_MEMBLOCK=y
+
+#
+# Objects
+#
+# CONFIG_OBJ_STATUS_ACC is not set

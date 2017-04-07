@@ -1,0 +1,7 @@
+menu "Objects"
+
+config OBJ_STATUS_ACC
+       bool "Enable XM/partition status accounting"
+       default "n"
+
+endmenu

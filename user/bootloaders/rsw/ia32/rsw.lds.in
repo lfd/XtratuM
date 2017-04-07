@@ -1,0 +1,62 @@
+/*
+ * $FILE$
+ * 
+ * ld script to build x86
+ * 
+ * $VERSION$
+ *
+ * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * 
+ * $LICENSE:
+ * (c) Universidad Politecnica de Valencia. All rights reserved.
+ *     Read LICENSE.txt file for the license.terms.
+ */
+
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
+OUTPUT_ARCH("i386")
+ENTRY(_start)
+
+START_ADDR = CONFIG_LOAD_ADDR;
+
+SECTIONS
+{
+  . = START_ADDR;
+  _srorsw = .;
+  .text ALIGN (0x1000): {  	
+  	*(.text)
+  }
+
+  .rodata ALIGN (4) : {
+	*(.rodata)
+  	*(.rodata.*)
+	*(.rodata.*.*)
+  }
+
+  .container ALIGN(4) : {
+  	     xmefHeader = . ;
+  	     *(.container)
+  }
+  _erorsw = .;
+  _srsw = .;
+  .data ALIGN (4) : AT ( ADDR (.container) + SIZEOF (.container)) {
+        _sdata = .;
+	_sdata_lma = LOADADDR(.data); 
+	*(.data)
+	_edata = .;
+  }
+  
+  .bss ALIGN (4) : {
+       _sbss = .;
+       *(COMMON)
+       *(.bss)
+       _ebss = .;
+  }
+
+   _ersw = .;
+
+  /DISCARD/ :
+  {
+	*(.note)
+	*(.comment*)
+  }
+}

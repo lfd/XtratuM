@@ -1,0 +1,122 @@
+/*
+ * $FILE: xm.lds
+ *
+ * ld script to build the ia32 version
+ *
+ * $VERSION$
+ *
+ * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ *
+ * $LICENSE:
+ * (c) Universidad Politecnica de Valencia. All rights reserved.
+ *     Read LICENSE.txt file for the license.terms.
+ */
+
+#include <config.h>
+
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
+OUTPUT_ARCH("i386")
+ENTRY(_start)
+
+BOOT_START = 0x00100000;
+XM_OFFSET = CONFIG_XM_OFFSET;
+
+SECTIONS
+{
+    . = BOOT_START;
+    _sxm = . + XM_OFFSET;
+    .boot ALIGN(0x1000) : {
+        _sboot = .;
+	*(.xm_header)
+	*(.boot.text)
+	*(.boot.data)
+        _eboot = .;
+    }
+
+    . = . + XM_OFFSET;
+    .vboot ALIGN(0x1000) : AT (ADDR (.vboot) - XM_OFFSET) {
+        _svboot = .;
+        *(.vboot.text)
+        *(.vboot.data)
+        _evboot = .;
+    }
+
+    .text ALIGN(0x1000) : AT (ADDR (.text) - XM_OFFSET) {
+        *(.text)
+    }
+
+    .rsv_hwirqs ALIGN(4) : {
+        rsvHwIrqs = .;
+        *(.rsv_hwirqs)
+        eRsvHwIrqs = .;
+    }
+
+    .rsv_ioports ALIGN(4) : {
+        rsvIoPorts = .;
+        *(.rsv_ioports)
+        eRsvIoPorts = .;
+    }
+
+    .rsv_physpages ALIGN(4) : {
+        rsvPhysPages = .;
+        *(.rsv_physpages)
+        eRsvPhysPages = .;
+    }
+
+    .rodata ALIGN(0x1000) : AT (ADDR (.rodata) - XM_OFFSET) {
+        hypercallsTab = .;
+	*(.hypercallstab)
+	hypercallFlagsTab = .;
+        *(.hypercallflagstab)
+	. = ALIGN(4);
+	__gpExTab = .;
+	*(.gp_ex_tab)
+	LONG(0)
+
+	. = ALIGN(4);
+	kDevTab = .;
+	*(.kdevtab)
+	LONG(0);
+
+	. = ALIGN(4);
+	objectSetupTab = .;
+	*(.objsetuptab)
+	LONG(0);
+
+        . = ALIGN(4);
+        *(.rodata)
+        *(.rodata.*)
+    }
+
+    .data ALIGN(0x1000) : AT (ADDR (.data) - XM_OFFSET) {
+        *(.data)
+    }
+
+    . = ALIGN(0x1000);
+    __x = .;
+    .edata ALIGN(0x1000) : AT (ADDR (.edata) - XM_OFFSET) {
+	_scdata = .;
+	*(.cdata)
+	_ecdata = .;
+	sysResetCounter = .;
+	LONG(0);
+    }
+    . = __x + SIZEOF(.data) + 4;
+
+    .bss ALIGN(0x1000) : AT (ADDR (.bss) - XM_OFFSET) {
+        _sbss = .;
+        *(COMMON)
+        *(.bss)
+        _ebss = .;
+    }
+
+    . = ALIGN(4K);
+    xmcTab = .;
+    _exm = .;
+
+    /DISCARD/ : {
+        *(.note)
+        *(.comment*)
+    }
+
+}

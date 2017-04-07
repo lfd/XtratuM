@@ -1,0 +1,105 @@
+=head1 NAME
+
+B<xmpack> - manage the XtratuM system image container
+
+=head1 SYNOPSIS
+
+B<xmpack> B<build> [ {-h|-b|-p} I<file>[I<:file>...] ...] I<container>
+
+B<xmpack> B<list> -c I<container>
+
+B<xmpack> B<extract> [I<-o> I<file>] -c I<noComponent> -f I<noFile> I<container>
+
+
+=head1 DESCRIPTION
+
+B<xmpack> manipulates the XtratuM system container. The container is a simple
+filesystem designed to contain the XtratuM hypervisor core and zero or more
+partitions.
+
+The container file should be written in ROM. At boot time, the resident
+software is in charge of reading the contents of the container and coping the
+components to the RAM areas where the hypervisor and he partitions will be
+executed. Note that XtratuM has no knowledge about the container structure.
+
+The container is organised as a list of C<components>. Each component is a
+list of files. A component is used to store an executable unit, which can be:
+the XtratuM hypervisor, a bootable partition or a non-bootable partition. Each
+component is a list of one or more files. The first file shall be a valid
+XtratuM image (see the XtratuM binary file header). The rest of files of the
+components are optional and can be used to attach extra data (for example the
+configuration table for the XtratuM component or the customization file for
+partition ones).
+
+B<xmpack> is a helper utility that can be used to deploy an XtratuM system. It
+is not mandatory to use this tool to deploy the application (hypervisor and
+the partitions) in the target machine.
+
+=over 4
+
+=item B<[build]> 
+
+A new container is created. Three kind of components can be included: 
+
+=over
+
+=item B<-h> to create an [H]ypervisor component; 
+
+=item B<-b> to create a [B]ootable partition; and
+
+=item B<-p> to create a non-bootable [P]artition.
+
+=back
+
+The files that are part of each component are specified as a list separated
+by "B<:>".
+
+=item B<[list]> 
+
+Shows the contents (components and the files of each component) of a
+container. If the option B<-c> is given, the blocks allocated to each file are
+also shown.
+
+
+=item B<[extract]> 
+
+Writes in the output file the specified file. The file is identified as the
+component number (parameter B<-c>) and the file within the component
+(parameter B<-f>).
+ 
+=back
+
+=head1 USAGE EXAMPLES
+
+A new container with one hypervisor and one booting partition. The hypervisor
+  container has two files: the hypervisor binary and the configuration table:
+
+  $ xmpack build -h ../core/xm_core.bin:xm_ct.bin -b partition1.bin -o container
+
+The same example but the second container has now two files: the partition
+image and a customisation file:
+
+  $ xmpack build -h ../core/xm_core.bin:xm_cf.bin \
+                 -b partition1.bin:p1.cfg \
+			     -b partition2.bin:p2.cfg container.bin
+
+
+
+List the contents of the container:
+
+  $ xmpack list container.bin
+  <Package file="container.bin" version="1.0.0">
+    <XMHypervisor file="../core/xm_core.bin" fileSize="97188" offset="0x0" size="97192" >
+        <Module file="xm_cf.bin" size="8976" />
+    </XMHypervisor>
+    <Partition file="partition1.bin" fileSize="29996" offset="0x19eb8" size="30000" >
+        <Module file="p1.cfg" size="16" />
+    </Partition>
+    <Partition file="partition2.bin" fileSize="30292" offset="0x213f8" size="30296" >
+        <Module file="p2.cfg" size="16" />
+    </Partition>
+  </Package>
+
+
+
+

@@ -1,0 +1,49 @@
+=pod 
+
+=head1 NAME
+
+B<xmcparser> - compiles XtratuM XML configuration files
+
+=head1 SYNOPSIS
+
+B<xmcparser> [-s F<xsd_file>] [-o F<output_file>] F<XM_CF.xml>
+
+
+=head1 DESCRIPTION
+
+C<xmcparser> reads an XtratuM XML configuration file and transforms it into a set of "C"
+data structures initialized with the XML data.
+C<xmcparser> performs internally the folowing steps:
+
+
+=over 4
+
+=item 1) Parse the XML file.
+
+=item 2) Validate the XML data.
+
+=item 3) Generate a set of "C" data structures initialised with the XML data.
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d> 
+
+Prints the dafault XML schema used to validate the XML configuration file. 
+
+=item B<-o> F<file> 
+
+Place output in F<file>.
+
+=item B<-s> F<xsd_file>
+
+Use the XML schema F<xsd_file> rather than the dafault XtratuM schema.
+
+=back
+
+=head1 USAGE EXAMPLES
+
+  xmcparser -o xm_cf.c.xmc xm_cf.xml

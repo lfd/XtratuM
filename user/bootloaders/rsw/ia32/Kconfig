@@ -1,0 +1,15 @@
+mainmenu "RSW Configuration"
+
+source "Kconfig"
+
+menu "RSW memory layout"
+
+config LOAD_ADDR
+       hex "Load address"
+       default "0x2000000"
+
+endmenu
+
+#config OUTPUT_ENABLED
+#       bool "Enable RSW output"
+#       default n

@@ -1,0 +1,4 @@
+# set the shell prompt for each linux partition
+partid=`echo quit | xmmanager | sed -n 's|\* Partition\([0-9]\+\):.*|\1|p'`
+HOSTNAME=`hostname`
+export PS1="$USER@$HOSTNAME${partid} \w # "

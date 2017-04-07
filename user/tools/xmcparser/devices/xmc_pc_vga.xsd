@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<xs:schema targetNamespace="http://www.xtratum.org/xm-2.3" 
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   xmlns="http://www.xtratum.org/xm-2.3"
+	   elementFormDefault="qualified" 
+	   attributeFormDefault="unqualified">
+  <xs:complexType name="pcVga_element">
+    <xs:attribute name="name" type="idString_t" use="required"/>
+  </xs:complexType>
+</xs:schema>

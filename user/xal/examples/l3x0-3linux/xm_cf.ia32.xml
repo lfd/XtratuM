@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<SystemDescription xmlns="http://www.xtratum.org/xm-2.3" version="1.0.0" name="hello_world">
+  <XMHypervisor console="PcUart" loadPhysAddr="0x100000">
+    <PhysicalMemoryAreas>
+      <Area start="0x100000" size="3MB"/>
+    </PhysicalMemoryAreas>
+    <HwDescription>
+      <Processor id="0">
+        <Sched>
+          <CyclicPlanTable>
+            <Plan id="0" majorFrame="20ms">
+              <Slot id="1" start="00ms" duration="20ms" partitionId="0"/>
+            </Plan>
+            <Plan id="1" majorFrame="12ms">
+              <Slot id="1" start="00ms" duration="3ms" partitionId="0"/>
+              <Slot id="2" start="03ms" duration="3ms" partitionId="1"/>
+              <Slot id="3" start="06ms" duration="3ms" partitionId="0"/>
+              <Slot id="4" start="09ms" duration="3ms" partitionId="2"/>
+            </Plan>
+          </CyclicPlanTable>
+        </Sched>
+      </Processor>
+      <MemoryLayout>
+        <Region start="0x0" size="640KB" type="ram"/>
+        <Region start="0xa0000" size="384KB" type="rom"/>
+        <Region start="0x100000" size="511MB" type="ram"/>
+        <Region start="0x31fff000" size="256MB" type="rom"/>
+        <Region start="0xd0000000" size="768MB" type="rom"/>
+      </MemoryLayout>
+    </HwDescription>
+  </XMHypervisor>
+  <PartitionTable>
+    <Partition id="0" name="Partition1" processor="0" flags="sv boot" headerOffset="0x0" loadPhysAddr="0x400000" imageId="0x0" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x400000" size="256MB" flags="mapped write"/>                      <!-- partition mem -->
+        <Area start="0x31fff000" size="256MB" flags="shared rom" />                     <!-- DMI mem -->
+        <Area start="0xd0000000" size="768MB" flags="mapped write rom"/>                <!-- PCI mem -->
+        <Area start="0x0" size="4KB" flags="mapped shared write rom"/>                  <!-- BIOS -->
+        <Area start="0x1000" size="636KB" flags="mapped shared write"/>                 <!-- BIOS rom -->
+        <Area start="0xa0000" size="384KB" flags="mapped write shared rom"/>            <!-- Reserved ROM -->
+        <Area start="0x19800000" size="4MB" flags="mapped shared write rom flag3"/>     <!-- VIRTIO mem -->
+        <Area start="0x19c00000" size="4MB" flags="mapped shared write rom flag3"/>     <!-- VIRTIO mem -->
+      </PhysicalMemoryAreas>
+      <TemporalRequirements duration="500ms" period="500ms"/>
+      <HwResources>
+        <Interrupts line="1 2 3 5 6 7 8 9 10 11 12 13 14 15"/>
+        <IoPorts>
+          <Range base="0x0" noPorts="25"/>
+          <Range base="0x22" noPorts="30"/>
+          <Range base="0x44" noPorts="58"/>
+          <Range base="0xa2" noPorts="854"/>
+          <Range base="0x3fd" noPorts="64515"/>
+        </IoPorts>
+      </HwResources>
+    </Partition>
+    <Partition id="1" name="Partition2" processor="0" flags="sv boot" headerOffset="0x0" loadPhysAddr="0x10400000" imageId="0x1" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x10400000" size="75MB" flags="mapped write"/>
+        <Area start="0xe0000" size="128KB" flags="mapped shared rom"/>                  <!-- BIOS mem -->
+        <Area start="0x3ffff000" size="4KB" flags="shared rom" />                       <!-- DMI mem -->
+        <Area start="0x19800000" size="4MB" flags="mapped shared write rom flag3"/>     <!-- VIRTIO mem -->
+      </PhysicalMemoryAreas>
+      <TemporalRequirements duration="500ms" period="500ms"/>
+    </Partition>
+    <Partition id="2" name="Partition3" processor="0" flags="sv boot" headerOffset="0x0" loadPhysAddr="0x18400000" imageId="0x2" console="PcUart">
+      <PhysicalMemoryAreas>
+        <Area start="0x18400000" size="75MB" flags="mapped write"/>
+        <Area start="0xe0000" size="128KB" flags="mapped shared rom"/>                  <!-- BIOS mem -->
+        <Area start="0x3ffff000" size="4KB" flags="shared rom" />                       <!-- DMI mem -->
+        <Area start="0x19c00000" size="4MB" flags="mapped shared write rom flag3"/>     <!-- VIRTIO mem -->
+      </PhysicalMemoryAreas>
+      <TemporalRequirements duration="500ms" period="500ms"/>
+    </Partition>
+  </PartitionTable>
+  <Devices>
+    <PcUart name="PcUart"/>
+    <PcVga name="PcVga"/>
+  </Devices>
+</SystemDescription>

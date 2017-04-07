@@ -1,0 +1,141 @@
+=head1 NAME
+
+B<xmeformat> - creates and display information of XEF files
+
+=head1 SYNOPSIS
+
+B<xmeformat>  B<read> [-h|-s|-m] F<file>
+
+B<xmeformat>  B<build> [-m] [-o F<outfile>] [-c] [-p F<payload_file>] F<file>
+
+
+
+=head1 DESCRIPTION
+
+C<xmeformat> converts an ELF, or a binary file, into an XEF format (XtratuM
+Executable Format). An XEF file contains one or more segments. A segment is a block
+of data that shall be copied in a contiguous area of memory (when loaded in main
+memory). The content of the XEF can optionally be compressed.
+
+An XEF file has a header and a set of segments. The segments corresponds to the
+allocatable sections of the source ELF file. In the header, there is a reserved
+area (16 bytes) to store user defined information. This information is called user
+payload.
+
+=over 4
+
+=item B<build> 
+
+A new XEF file is created, using F<file> as input.
+
+=over
+ 
+=item B<-m> 
+
+The source file is not an ELF file but a user defined customisation.  In this case,
+no consistency checks are performed.
+
+Customisation files are used to attach data to the partitions (See the C<xmpack>
+command). This data will be accessible to the partition at boot time. It is commonly
+used as partition defined run-time configuration parameters.
+
+
+=item B<-o> F<file> 
+
+Places output in file F<file>.
+
+
+=item B<-c> 
+
+The XEF segments are compressed using the LSZZ algorithm.
+
+=item B<-p> F<file>
+
+The first 16 bytes of the F<file> are copied into the payload area of the XEF header.
+The size of the file shall be at least 16 bytes, otherwise an error is returned.
+
+=back
+
+The MD5 sum value is printed if no errors.
+
+
+=item B<read> 
+
+Shows the contents of the XEF file.
+
+=over 4
+
+=item B<-h>
+
+Print the content of the header.
+
+
+=item B<-s>
+
+Lists the segments and its attributes.
+
+=item B<-m>
+
+Lists the table of custom files. This options only works for partition and hypervisor
+XEF files.
+
+=back
+
+=back
+
+=head1 USAGE EXAMPLES
+
+Create a customisation file:       
+
+  $ xmeformat build -m -o custom_file.xef data.in
+  b07715208bbfe72897a259619e7d7a6d custom_file.xef
+
+List the header of the XEF custom file:
+
+  $ xmeformat read -h custom_file.xef
+  XEF header:
+    signature: 0x24584546
+    version: 1.0.0
+    flags: XEF_DIGEST XEF_CONTENT_CUSTOMFILE
+    digest: b07715208bbfe72897a259619e7d7a6d
+    payload: 00 00 00 00 00 00 00 00
+             00 00 00 00 00 00 00 00
+    file size: 232
+    segment table offset: 80
+    no. segments: 1
+    customFile table offset: 104
+    no. customFiles: 0
+    image offset: 104
+    image length: 127
+    XM image's header: 0x0
+
+Build the hypervisor XEF file:
+
+  $ xmeformat build -o xm_core.xef -c core/xm_core
+
+List the segments and headers of the XtratuM XEF file:
+  $ xmeformat read -s xm_core.xef
+  Segment table: 1 segments
+    segment 0
+      physical address: 0x40000000
+      virtual address: 0x40000000
+      file size: 68520
+      compressed file size: 32923 (48.05%)
+
+  $ xmeformat read -h  xm_core.xef
+  XEF header:
+    signature: 0x24584546
+    version: 1.0.0
+    flags: XEF_DIGEST XEF_COMPRESSED XEF_CONTENT_HYPERVISOR
+    digest: 6698cfcf9311325e46e79ed50dfc9683
+    payload: 00 00 00 00 00 00 00 00
+             00 00 00 00 00 00 00 00
+    file size: 33040
+    segment table offset: 80
+    no. segments: 1
+    customFile table offset: 104
+    no. customFiles: 1
+    image offset: 112
+    image length: 68520
+    XM image's header: 0x40010b78
+    compressed image length: 32928 (48.06%)

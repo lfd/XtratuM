@@ -1,0 +1,1 @@
+rootwait=/dev/vda1

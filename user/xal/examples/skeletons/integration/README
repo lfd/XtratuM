@@ -1,0 +1,39 @@
+This file contains several tips on kernel parameters.
+Each Linux partition gets a single command line with the
+kernel parameters in a single file.
+
+
+    root=<rootdev>
+    
+This option sets the root device. Check how your system
+detects the disk drives. For example:
+                     
+            root=/dev/hda1   # <IDE disk>     (IO-server)
+            root=/dev/sda1   # <serial disk>  (IO-server)
+
+
+    spare_port_name=<name>
+    
+This option sets the sampling port name that will be 
+used by the Linux partition to send requests to the spare 
+host. Find the name in the XML configuration file.
+
+    
+    spare_port_size=<size>
+    
+This option sets the sampling port size. Again, find the
+correct value in the XML configuration file.
+
+
+    rootwait=<rootdev>
+    
+This is the recommended option for application Linux partitions
+(not the IO server). The IO server has to boot and offer a virtual
+disk to the Linux partition. However, the Linux partition may 
+need the virtual disk before the server has been able to offer it. 
+Therefore, we keep the Linux partition waiting until the virtual
+disk is made available. More information on this parameter in the
+kernel-parameters documentation of the Linux kernel.
+
+            rootwait=/dev/vda1   # <virtual disk> (Linux partition)
+

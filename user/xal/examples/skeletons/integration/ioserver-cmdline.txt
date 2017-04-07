@@ -1,0 +1,1 @@
+root=/dev/sda1 spare_port_name=spreq spare_port_size=32

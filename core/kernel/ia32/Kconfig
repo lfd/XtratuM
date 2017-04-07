@@ -1,0 +1,65 @@
+mainmenu "XM Configuration"
+
+config IA32
+       def_bool y
+
+config TSC
+       def_bool y
+       
+config MMU
+	def_bool y
+
+config NO_HWIRQS
+       int
+       default "16"
+
+config TARGET_LITTLE_ENDIAN
+       def_bool y
+
+config XM_OFFSET
+       hex
+       default "0xFC000000"
+
+menu "Processor"
+
+choice
+     prompt "Board"
+     default PC_BOARD
+
+config PC_BOARD
+       bool "PC"
+
+endchoice
+
+config NO_CPUS
+       int
+       default "1"
+
+endmenu
+
+menu "Hypervisor arch-dependent parameters"
+    
+config PARTITION_NO_GDT_ENTRIES
+       int "Number of GDTs entries per partition"
+       default "32"
+       
+choice
+       prompt "System Timer"
+       default PIT
+
+config PIT
+       bool "PIT"
+       
+config HPET
+       bool "HPET"
+       
+endchoice
+
+config HPET_VENDOR_ID
+       hex "HPET Vendor ID"
+       default "0x8086"
+       depends on HPET
+
+endmenu
+
+source "kernel/Kconfig"

@@ -1,0 +1,58 @@
+=head1 NAME
+
+B<elf2xef> - converts ELF files to XEF format
+
+=head1 SYNOPSIS
+
+B<elf2xef> [-o F<outfile>] [-i <id>] [-x <section_id>] F<infile>
+
+=head1 DESCRIPTION
+
+C<elf2xef> converts an ELF into an XEF format (XtratuM Executable Format).
+An XEF file contains one or more segments. A segment is a block
+of data that shall be copied in a contiguous area of memory (when loaded in main
+memory).
+
+An XEF file has a header and a set of segments. The segments corresponds to the
+allocatable sections of the source ELF file.
+
+=over
+ 
+=item B<-i> <id> 
+
+Set the identification number of the F<outfile> to <id>.
+
+=item B<-o> F<outfile> 
+
+Places output in file F<outfile>.
+
+=item B<-x> <section_id> 
+
+Exclude the ELF section with id <section_id> from the output file F<outfile>.
+
+=back
+
+=head1 INPUT FILE FORMAT
+
+The input file should conform to the ELF32 version 1 format,
+refer to the ELF specification document for more details.
+
+ ELF Header:
+  Class:                             ELF32
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           Intel 80386
+  Version:                           0x1
+  Flags:                             0x0
+
+=head1 USAGE EXAMPLES
+
+Create a partition file:       
+
+  $ elf2xef -o partition.xef partition.elf
+
+Build the hypervisor XEF file:
+
+  $ elf2xef -o xm_core.xef -c core/xm_core

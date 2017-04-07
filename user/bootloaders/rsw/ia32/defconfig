@@ -1,0 +1,15 @@
+#
+# Automatically generated make config: don't edit
+# XM version: 2.3.2
+# Tue Aug 14 21:42:36 2012
+#
+CONFIG_STACK_SIZE=8
+CONFIG_XEF_SUPPORT=y
+CONFIG_ARCH="ia32"
+CONFIG_KERNELVERSION="2.3.2"
+
+#
+# RSW memory layout
+#
+CONFIG_LOAD_ADDR=0x2000000
+# CONFIG_OUTPUT_ENABLED is not set

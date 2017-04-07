@@ -1,0 +1,109 @@
+=for comment libxm-linux: An API to access XtratuM services from Linux
+
+Libxm-linux is a library which allow user programs running on Linux-based
+partitions to perform XtratuM hypercalls, simplifiyng the development of
+XtratuM user model applications under Linux-based partitions.
+
+=head1 Introduction
+
+When a user application is developed under Linux, it is linked against the
+system call interface of the operating system, instead of the hypervisor call interface.
+Therefore, user mode applications running under Linux do not have access to the
+hypervisor interface.
+The LKM module I<virtsrv.c> allows user mode applications to access the
+hypervisor call interface. The source code of the module is located at
+I<linux-xm/arch/x86/xm/virtsrv.c>.
+
+The module I<virtsrv.c> works by creating a character device I</dev/xmctl>
+that user mode applications access to issue hypercalls by encoding
+the hypercall and its parameters as a L<ioctl(2)|ioctl(2)> system call.
+When a L<ioctl(2)|ioctl(2)> is performed on I</dev/xmctl>, the I<virtsrv.c>
+module decodes the hypercall, executes it and returns the hypercall return code.
+
+The C<libxm-linux> library is in charge of providing a wrapper library
+that opens the I</dev/xmctl> device and encodes hypercalls as L<ioctl(2)|ioctl(2)> system calls.
+This allows applications to transparently access the hypervisor interface from user mode
+using the same XtratuM C<libxm> API used to develop bare XAL partitions.
+
+=head1 Contents
+
+=begin latex
+
+The library is located at the directory \textit{xtratum/linux/libxm-linux} of the
+XtratuM binary distribution.
+The listing \ref{fig:libxm-linux} below shows the texttt{libxm-linux} directory contents:
+
+=over 4
+
+=item * the I<libxm-linux.a> contains the library object code itself.
+
+=item * the "I<xm-linux.h>" library header file contained in the I<include/> directory.
+
+=item * the I<examples/> directory contains several C<libxm-linux> examples ready to use.
+
+=item * the I<common/> directory contains a I<rules.mk> to build program using C<libxm-linux>.
+
+=back
+
+\begin{lstlisting}[label=fig:libxm-linux,caption=The \textit{libxm-linux/} directory contents.]
+libxm-linux
+    |--- common/
+    |  |--- config.mk
+    |  |--- config.mk.dist
+    |  \--- rules.mk
+    |--- examples/
+    |  |--- gettime.c
+    |  |--- hello.c
+    |  |--- Makefile
+    |  \--- part_manager.c
+    |--- include/
+    |  \--- xm-linux.h
+    |--- libxm-linux.a
+    \--- README
+\end{lstlisting}
+
+=end latex
+
+The API provided by the C<libxm-linux> is identic to standard interface
+provided by the XtratuM C<libxm> API. Thus, user programs may use this library
+as if they were bare applications using C<libxm> to directly issue XtratuM
+hypercalls. 
+To see the list of supported hypercalls, check the module file located at
+I<linux-xm/arch/x86/xm/virtsrv.c>.
+
+In addition security considerations must be taken into account,
+as improper permissions on the I</dev/xmctl> device allow user programs to
+directly issue XtratuM hypercalls.
+
+=head1 Initialisation 
+
+It is important to note that before using the libxm-linux library,
+it must be initialised by calling the C<init_libxm()> function with the following parameters:
+
+    init_libxm(0, 0);
+
+After successfully calling the C<init_libxm()> the library can be used to perform hypercalls.
+The C<init_libxm()> internally performs an L<open(2)|open(2)> of the I</dev/xmctl> device,
+in case of not being able to open the device the C<init_libxm()> call fails with the error:
+    
+    $ libxm-linux/examples/hello
+    error: init_libxm  open /dev/xmctl: No such file or directory
+
+=head1 Usage Examples
+
+=begin latex
+
+The libxm-linux library is accompanied by a set of examples 
+that explain how to use the libxm-library.
+
+The listing~\ref{fig:hello} shows a ``Hello World'' program which uses the
+\texttt{XM\_write\_console()} hypercall to write "Hello World" to the hypervisor console.
+As mentioned in section \ref{Initialisation}, the libxm-linux must be initialised
+by calling \texttt{init\_libxm()} before making use of the library.
+
+In order to compile the example run the \texttt{make} program on the examples directory.
+Once the examples are compiled they can be run from the command line.
+
+\lstinputlisting[caption={libxm-linux/examples/hello.c},label={fig:hello},language=C]{libxm-linux/examples/hello.c}
+
+=end latex

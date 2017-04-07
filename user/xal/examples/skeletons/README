@@ -1,0 +1,81 @@
+-----------------------
+ XtratuM SDK Skeletons
+-----------------------
+
+This directory contains skeletons for all kind of partitions.
+To build a custom project from this directory:
+
+- linux-ioserver -
+This project is prepared to create the ioserver. The Linux ioserver is a
+separate Linux partition with a specific configuration including many built-in
+device drivers.
+
+- linux-partition -
+To build user partitions based on Linux.
+
+- xal-partition -
+Contains a basic makefile to build a bare-C (XAL) standalone partition.
+
+- spare-host -
+WARNING: This partition should not be modified.
+It is the spare-host in case that you want to have dynamic partition scheduling
+on your XtratuM based application. Several conditions must be met to use this
+partition as, for example, defining some sampling ports in the XM_CF XML file
+for communicating with the spare host. Once the sampling ports have been
+defined in the XML file, this XM_CF is passed as a custom file to the
+spare-host partition which parses the XM_CF and automatically configures, opens
+and starts accepting spare requests from the the sampling ports.
+
+-------
+ NOTES
+-------
+
+ * Each makefile has been configured to get an ID parameter to indicate partition
+   identifier and simplify this subtle yet important detail. Therefore, they are
+   prepared to be run with:
+
+    $ make ID=2
+
+ * Consider creating a symbolic link to the XML configuration file.
+
+ * You'll find README files with specific instructions inside the skeleton folders.
+
+
+----------------------
+ Application building
+----------------------
+
+In order to build an application from the skeletons, please follow 
+the next steps:
+
+# Design the application
+	1.  Design your application and define the partitions which compose it
+	2.  Create a folder for the application project elsewhere, for example, '/opt/project'
+	3.  Copy the skeletons you need to the project folder.
+	4.  Copy the integration folder to the project folder. 
+	4.  Create an XML configuration file and copy it to the project folder. Inside
+	    the skeletons folder are some examples that cover all the options required
+	    to build all kind of applications. The XML configuration file should be
+	    stored with the name "xm_cf.ia32.xml" in the project folder so it simplifies
+	    the build. 
+	5.  Go to the project folder. You may have to work a bit with the Makefiles.
+	6.  The Linux partitions are ready to be build. Of course, you need the compiled kernel
+	    sources and the kernel tree. Inside the partitions are some READMES specific to each 
+	    Linux.
+	7.  Once you've successfully compiled each of the partitions, a '.xef' file has been
+	    created. Copy all the '.xef' files to the integration folder.
+	8.  Get into the integration folder. 
+	9.  Modify the integration Makefile and set the right PARTITIONS value. Do the same
+	    with the PACK_ARGS value. This value contains the command line for the xmpack 
+	    application, and has the following format:
+	        -h <hypervisor>:<configuration_file>
+	        -b <partition.xef>:<custom_file_1>:<custom_file_2>:...
+	   	You only have to set the correct values for the partitions. NOTE: The Linux partitions
+	   	require a specific order for the custom files (CF): CF1 --> cmdline, CF2 --> initrd
+	10. Make the integration project. If successful, a multiboot compliant 'resident_sw' file
+	    would have been created.
+	    NOTE: Be careful when cleaning the integration project build, as it removes the '.xef' files.
+
+
+
+

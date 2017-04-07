@@ -1,0 +1,21 @@
+=head1 NAME
+
+B<rswbuild> - create a bootable image
+
+=head1 SYNOPSIS
+
+B<rswbuild> F<container> F<bootable>
+
+
+=head1 DESCRIPTION
+
+C<rswbuild> is a shell script that creates a bootable file by combining the resident
+software code with the F<container> file. The container shall be a valid file created
+with the C<xmpack> tool.
+
+The resident software object file is read from the distribution directory pointer by
+the C<$XTRATUM_PATH> variable.
+
+=head1 USAGE EXAMPLES
+
+ rswbuild container resident_sw

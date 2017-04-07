@@ -1,0 +1,27 @@
+# Version.Subersion.Revision (8bits.8bits.8bits) #
+##################################################
+#
+#   * The version is only changed when the XtratuM internal philosophy
+#     has changed. For example, XtratuM v1 is a nanokernel which requires 
+#     Linux to be executed whereas XtratuM v2 is stand-alone baremetal 
+#     hypervisor.
+#
+#   * An ODD subversion indicates a development serie (ABI or API 
+#     incompatibility between revisions of the same serie). A new
+#     revision could implement new functionalities.
+#
+#   * An EVEN subversion shows a production serie (compatibility at 
+#     ABI and API level among revisions of the same serie). A new
+#     revision only reflect bug fixing.
+#
+##################################################
+
+XM_VERSION=2
+XM_SUBVERSION=4
+XM_REVISION=0
+XM_EXTRAVERSION=
+
+XTRATUMVERSION=${XM_VERSION}.${XM_SUBVERSION}.${XM_REVISION}${XM_EXTRAVERSION}
+
+export XTRATUMVERSION
+export XM_VERSION XM_SUBVERSION XM_REVISION XM_EXTRAVERSION
