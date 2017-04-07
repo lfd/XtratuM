@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -71,11 +71,9 @@ void DoTrap(irqCtxt_t *ctxt) {
     } else {
         hmLog.partitionId=sched->cKThread->ctrl.g->cfg->id;
     }
-
 #ifdef CONFIG_VERBOSE_TRAP
     DumpState(1, ctxt);
 #endif
-
     action=HmRaiseEvent(&hmLog);
     if (IsSvIrqCtxt(ctxt) && !hmLog.system)
         PartitionPanic(0, 0, "Partition in unrecoverable state\n");
@@ -89,7 +87,7 @@ void DoTrap(irqCtxt_t *ctxt) {
 }
 
 void DoIrq(irqCtxt_t *ctxt) {
-    localCpu_t *cpu=GET_LOCAL_CPU();
+    localCpu_t *cpu = GET_LOCAL_CPU();
     ASSERT(!HwIsSti());
 #ifdef CONFIG_OBJ_STATUS_ACC
     systemStatus.noIrqs++;
@@ -97,16 +95,16 @@ void DoIrq(irqCtxt_t *ctxt) {
     cpu->irqNestingCounter++;
     HwAckIrq(ctxt->irqNr);
     if (irqHandlerTab[ctxt->irqNr].handler)
-	(*(irqHandlerTab[ctxt->irqNr].handler))(ctxt, irqHandlerTab[ctxt->irqNr].data);
+    (*(irqHandlerTab[ctxt->irqNr].handler))(ctxt, irqHandlerTab[ctxt->irqNr].data);
     else
-	DefaultIrqHandler(ctxt, 0);
+    DefaultIrqHandler(ctxt, 0);
 
     //HwEndIrq(ctxt->irqNr);
     cpu->irqNestingCounter--;
     do {
-	if (cpu->irqNestingCounter==SCHED_PENDING)
-	    Scheduling();
-    } while(cpu->irqNestingCounter==SCHED_PENDING);
+        if (cpu->irqNestingCounter==SCHED_PENDING)
+        Scheduling();
+    }while(cpu->irqNestingCounter==SCHED_PENDING);
     ASSERT(!HwIsSti());
     ASSERT(!(cpu->irqNestingCounter&SCHED_PENDING));
 }
@@ -124,7 +122,6 @@ void __VBOOT SetupIrqs(void) {
 
     for (irqNr=0; irqNr<TRAP_NR; irqNr++)
         trapHandlerTab[irqNr]=0;
-        /*trapHandlerTab[irqNr]=UnexpectedTrapHandler;*/
 
     ArchSetupIrqs();
 }

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -386,6 +386,7 @@ static inline xm_s32_t GetQPortStatus(xmObjDesc_t desc, xmQueuingPortStatus_t *s
 	status->validPeriod=xmcCommChannelTab[xmcCommPorts[port].channelId].validPeriod;
 	status->maxMsgSize=xmcCommChannelTab[xmcCommPorts[port].channelId].q.maxLength;
 	status->maxNoMsgs=xmcCommChannelTab[xmcCommPorts[port].channelId].q.maxNoMsgs;
+	status->noMsgs=channelTab[xmcCommPorts[port].channelId].q.usedMsgs;
 	status->flags=0;
     } else
 	memset(status, 0, sizeof(xmSamplingPortStatus_t));

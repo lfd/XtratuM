@@ -11,15 +11,11 @@ XTRATUM_PATH=.
 path.mk:
 	@/bin/echo -e "\n# Automatically added by XM" > path.mk
 	@/bin/echo -e "# Please don't modify" >> path.mk
-	@/bin/echo -e "XTRATUM_PATH=`pwd`" >> path.mk
-	@/bin/echo -e "export XTRATUM_PATH" >> path.mk
+	@/bin/echo -e "export XTRATUM_PATH=`pwd`" >> path.mk
+	@/bin/echo -e "`user/bin/scmversion`" >> path.mk
 	@cat path.mk >> xmconfig
 	@$(RM) -f path.mk
 endif
-
-
-
-
 
 include version
 include config.mk
@@ -93,7 +89,7 @@ DISTROTMP=/tmp/$(DISTRO)-$$PPID
 DISTROTAR = $(DISTRO).tar.bz2
 $(DISTROTAR): # xm
 	@$(RM) $(DISTROTAR)
-	@make -s -C user/xal/examples clean
+	@#make -s -C user/xal/examples clean
 	@mkdir $(DISTROTMP) || exit 0
 	@user/bin/xmdistro $(DISTROTMP)/$(DISTRO) $(DISTROTAR)
 	@$(RM) -r $(DISTROTMP)

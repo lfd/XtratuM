@@ -8,7 +8,7 @@
  * Author: Salva Peiró <speiro@ai2.upv.es>
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -38,6 +38,20 @@ char *strcpy(char *dest, const char* src) {
     while ((*dest++ = *src++))
         ;
     return ret;
+}
+
+char *strncpy(char *dest, const char *src, xmSize_t n) {
+	xm_s32_t j;
+
+	memset(dest,0,n);
+
+	for (j=0; j<n && src[j]; j++)
+	dest[j]=src[j];
+
+	if (j>=n)
+	dest[n-1]=0;
+
+	return dest;
 }
 
 xm_s32_t strcmp(const char *s1, const char *s2) {

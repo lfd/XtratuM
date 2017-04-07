@@ -11,7 +11,7 @@ else
 endif
 
 xm.lds: kernel/$(ARCH)/xm.lds.in include/config.h
-	@$(CC) $(ASFLAGS) -x assembler-with-cpp -E -P -I$(XM_CORE_PATH)/include kernel/$(ARCH)/xm.lds.in -o kernel/$(ARCH)/xm.lds
+	@$(TARGET_CC) $(TARGET_ASFLAGS) -x assembler-with-cpp -E -P -I$(XM_CORE_PATH)/include kernel/$(ARCH)/xm.lds.in -o kernel/$(ARCH)/xm.lds
 
 XMCORE_SUBDIRS=\
 	kernel/$(ARCH)\
@@ -67,31 +67,31 @@ defconfig: links Kconfig.ver
 
 core: $(XTRATUM_PATH)/core/include/autoconf.h xm.lds generate_offsets
 	@exec echo -e "\n> Building XM Core";
-	@for dir in $(XMCORE_SUBDIRS) ; do \
+	for dir in $(XMCORE_SUBDIRS) ; do \
 		echo "  - $$dir"	; \
-		$(MAKE) -s  -C $$dir all  ; \
+		$(MAKE)  -C $$dir all  ; \
 		if [ "$$?" -ne 0 ]; then exit 1 ; fi \
 	done
-	@$(LD) $(LDFLAGS) -nostdlib -Tkernel/$(ARCH)/xm.lds -o xm_core.1 $(KOBJS) $(LIBGCC)
-	@$(OBJCOPY) -O binary -j .data xm_core.1 data.bin
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -nostdlib -Tkernel/$(ARCH)/xm.lds -o xm_core.1 $(KOBJS) $(LIBGCC)
+	@$(TARGET_OBJCOPY) -O binary -j .data xm_core.1 data.bin
 	@touch tmp.S
-	@$(CC) $(CFLAGS_ARCH) -c tmp.S $(AFLAGS)
-	@$(OBJCOPY) --add-section=.cdata=data.bin --set-section-flags=.cdata=load,alloc tmp.o
+	@$(TARGET_CC) $(TARGET_CFLAGS_ARCH) -c tmp.S
+	@$(TARGET_OBJCOPY) --add-section=.cdata=data.bin --set-section-flags=.cdata=load,alloc tmp.o
 	@exec echo -e "> Linking XM Core";
-	@$(LD) $(LDFLAGS) -nostdlib -Tkernel/$(ARCH)/xm.lds -o xm_core $(KOBJS) tmp.o $(LIBGCC)
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -nostdlib -Tkernel/$(ARCH)/xm.lds -o xm_core $(KOBJS) tmp.o $(LIBGCC)
 	@$(RM) -f xm_core.1 data.bin tmp.o tmp.S
 	@size xm_core;
-	@$(OBJCOPY) -S -O binary xm_core xm_core.bin
+	@$(TARGET_OBJCOPY) -S -O binary xm_core xm_core.bin
 	@chmod -x xm_core xm_core.bin
 	@exec echo "> Done";
 
 generate_offsets:
-	@$(CC) $(CFLAGS) -S -o offsets.S $(XTRATUM_PATH)/scripts/asm-offsets.c -D_GENERATE_OFFSETS_ -D_OFFS_FILE_=\"$(ARCH)/gen_offsets.h\"
+	@$(TARGET_CC) $(TARGET_CFLAGS) -S -o offsets.S $(XTRATUM_PATH)/scripts/asm-offsets.c -D_GENERATE_OFFSETS_ -D_OFFS_FILE_=\"$(ARCH)/gen_offsets.h\"
 	@$(SHELL) $(XTRATUM_PATH)/scripts/asm-offsets.sh offsets.h < offsets.S > $(XM_CORE_PATH)/include/$(ARCH)/asm_offsets.h
 	@$(RM) -f offsets.S
 
 extract_info:
-	@$(HOSTCC) -Wall -O2 -o $(XTRATUM_PATH)/scripts/extractinfo $(XTRATUM_PATH)/scripts/extractinfo.c -DOBJCOPY=\"$(OBJCOPY)\" --include $(XTRATUM_PATH)/core/include/autoconf.h
+	@$(HOST_CC) -Wall -O2 -o $(XTRATUM_PATH)/scripts/extractinfo $(XTRATUM_PATH)/scripts/extractinfo.c -DTARGET_OBJCOPY=\"$(TARGET_OBJCOPY)\" --include $(XTRATUM_PATH)/core/include/autoconf.h
 	@$(XTRATUM_PATH)/scripts/extractinfo $(XTRATUM_PATH)/core/xm_core 2> $(XM_CORE_PATH)/include/$(ARCH)/ginfo.h
 
 

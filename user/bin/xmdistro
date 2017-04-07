@@ -29,20 +29,14 @@ user/bin/xminstall -g -t $targetdir/xm
 /bin/echo -e "   - Installing XAL"
 user/xal/bin/xalinstall -i -t $targetdir/xal
 
-/bin/echo -e "   - Installing LinuxTools"
-user/linux/bin/linuxinstall -i -t $targetdir/linux
+#/bin/echo -e "   - Installing LinuxTools"
+#user/linux/bin/linuxinstall -i -t $targetdir/linux
 
-mv $targetdir/xal/examples $targetdir/examples
-user/xal/bin/xalinstall -g -t $targetdir/examples
+mv $targetdir/xal/examples $targetdir/xal-examples
+user/xal/bin/xalinstall -g -t $targetdir/xal-examples
 
 /bin/echo -e "   - Generating XAL sha1sums"
 user/xal/bin/xalinstall -g -t $targetdir/xal
-
-#/bin/echo -e "   - Installing XM examples"
-#user/examples/bin/exampleinstall -i -t $targetdir/xm-examples
-
-#/bin/echo -e "   - Generating XM examples sha1sums"
-#user/examples/bin/exampleinstall -g -t $targetdir/xm-examples
 
 cp user/bin/xtratum-installer $targetdir 
 

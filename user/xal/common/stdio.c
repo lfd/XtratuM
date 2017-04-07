@@ -8,20 +8,13 @@
  * Author: Salva Peiró <speiro@ai2.upv.es>
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
- */
-/*
- * - Sept 2012 speiro: Minimal printf() initial implementation
- * - Dec 2012  speiro: simplify vsprintf() with fmtflags
- * - Dec 2012  speiro: added vsnprintf() with strings size checks
  */
 
 #include <stdarg.h>
 #include <string.h>
 #include <xm.h>
-
-#define ABS(v) ((v < 0) ? -v: v)
 
 int putchar(int c) {
     static char buff[512];
@@ -66,36 +59,29 @@ static xm_s32_t itoa(xm_u64_t uval, char a[SCRATCH], xm_u32_t base)
 	return n;
 }
 
-#define FLAG_DOFMT 		(1<<0)
-#define FLAG_ISLONG		(1<<1)
-#define FLAG_ISVLONG	(1<<2)
-
-#define CHECKSTR(strStart, strPtr, strMaxLen) ((strPtr - strStart) >= strMaxLen)
-
-xm_s32_t vsnprintf(char *s, int nc, const char *fmt, va_list ap)
+#define ABS(v) ((v < 0) ? -v: v)
+xm_u32_t vsprintf(char *s, const char *fmt, va_list ap)
 {
 	const char *p;
 	char *bs, *sval;
 	char buf[SCRATCH];
-	xm_u32_t n, fmtflag, base;
+	xm_u32_t n, dofmt, islong, base;
 	xm_u64_t uval;
 	xm_s64_t ival;
 
 	bs = s;
 	for (p = fmt; *p; p++) {
-		if (CHECKSTR(bs, s, nc))
-			break;
-
-		fmtflag = 0;
+		dofmt = 0;
 		if (*p == '%'){
-			fmtflag |= FLAG_DOFMT;
+			dofmt = 1;
+			islong = 0;
 		} else
 			*s++ = *p;
 
-		while(fmtflag & FLAG_DOFMT)
+		while(dofmt)
 		switch (*++p) {
 		case 'l': {
-			fmtflag |= (fmtflag & FLAG_ISLONG)? FLAG_ISVLONG: FLAG_ISLONG;
+			islong++;
 			break;
 		}
 		case 'u':
@@ -105,25 +91,21 @@ xm_s32_t vsnprintf(char *s, int nc, const char *fmt, va_list ap)
 			if (*p == 'x')
 				base=16;
 			if (*p == 'd'){
-				ival = (fmtflag & FLAG_ISVLONG)? va_arg(ap, xm_s64_t): va_arg(ap, xm_s32_t);
+				ival = islong > 1? va_arg(ap, xm_s64_t): va_arg(ap, xm_s32_t);
 				n = itoa(ABS(ival), buf, base);
 				if (ival < 0) buf[--n] = '-';
 			} else {
-				uval = (fmtflag & FLAG_ISVLONG)? va_arg(ap, xm_u64_t): va_arg(ap, xm_u32_t);
+				uval = islong > 1? va_arg(ap, xm_u64_t): va_arg(ap, xm_u32_t);
 				n = itoa(uval, buf, base);
 			}
-			if (CHECKSTR(bs, s+strlen(&buf[n]), nc))
-				break;
 			s = strcpy(s, &buf[n]) + (sizeof(buf)-1 - n);
-			fmtflag = 0;
+			dofmt = 0;
 			break;
-				  }
+		}
 		case 's': {
 			sval = va_arg(ap, char *);
-			if (CHECKSTR(bs, s+strlen(sval), nc))
-				break;
 			s = strcpy(s, sval) + strlen(sval);
-			fmtflag = 0;
+			dofmt = 0;
 			break;
 		}
 		default:
@@ -131,59 +113,36 @@ xm_s32_t vsnprintf(char *s, int nc, const char *fmt, va_list ap)
 			break;
 		}
 	}
-
 	return (s - bs);
 }
 
-xm_s32_t vsprintf(char *s, const char *fmt, va_list ap)
+int vprintf(const char *fmt, va_list ap)
 {
-	xm_s32_t n = 0;
-
-	n = vsnprintf(s, 1024, fmt, ap);
-
-	return n;
-}
-
-xm_s32_t vprintf(const char *fmt, va_list ap)
-{
-	xm_s32_t n = 0;
+	int n;
 	static char str[1024];
 
-	n = vsnprintf(str, sizeof(str), fmt, ap);
+	n = vsprintf(str, fmt, ap);
 	uartputs(str, n);
 
 	return n;
 }
 
-xm_s32_t snprintf(char *s, xm_s32_t nc, const char *fmt, ...)
+int sprintf(char *s, const char *fmt, ...)
 {
-	xm_s32_t n = 0;
-	va_list ap;
+    va_list ap;
+    int n = 0;
 
-	memset(s, 0, nc);
 	va_start(ap, fmt);
-	n = vsnprintf(s, nc, fmt, ap);
+	n = vsprintf(s, fmt, ap);
 	va_end(ap);
 
 	return n;
 }
 
-xm_s32_t sprintf(char *str, const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
-	xm_s32_t n = 0;
-	va_list ap;
-
-	va_start(ap, fmt);
-	n = vsprintf(str, fmt, ap);
-	va_end(ap);
-
-	return n;
-}
-
-xm_s32_t printf(const char *fmt, ...) 
-{
-	va_list ap;
-	xm_s32_t n = 0;
+    va_list ap;
+    int n = 0;
 
 	va_start(ap, fmt);
 	n = vprintf(fmt, ap);

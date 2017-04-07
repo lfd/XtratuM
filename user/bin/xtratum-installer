@@ -97,7 +97,7 @@ function chktargetgcc(){
 }
 
 TARGET_PATH=/opt
-TARGET_TOOLCHAIN=/usr/bin
+TARGET_TOOLCHAIN=/usr/bin/
 HOST_TOOLCHAIN=
 
 if test -d "$TARGET_CCPATH"; then
@@ -232,19 +232,22 @@ if $installok; then
 	cp $TARGET_PATH/xal/common/config.mk.dist $TARGET_PATH/xal/common/config.mk
 	
 	# examples/example.*/Makefile
-	for example in `ls -d $TARGET_PATH/examples/*/`; do
+	#for example in `ls -d $TARGET_PATH/examples/*/ $TARGET_PATH/examples/*/*/`; do
+	for example in `ls -d $TARGET_PATH/xal-examples/*/`; do
         if [ ! -e $example/Makefile ]; then
             continue
         fi
         sed -i "s|XAL_PATH[ ]*=.*|XAL_PATH=$TARGET_PATH/xal|" $example/Makefile;
-        sed -i "s|LINUXTOOLS_PATH[ ]*=.*|LINUXTOOLS_PATH=\$(XTRATUM_PATH)/../linux|" $example/Makefile;
     done
 
 	# linux/common/config.mk
-	sed -i "s|XTRATUM_PATH[ ]*=.*|XTRATUM_PATH=$TARGET_PATH/xm|" $TARGET_PATH/linux/libxm-linux/common/config.mk.dist
-	sed -i "s|LIBXMLINUX_PATH[ ]*=.*|LIBXMLINUX_PATH=$TARGET_PATH/linux/libxm-linux|" $TARGET_PATH/linux/libxm-linux/common/config.mk.dist
-	cp $TARGET_PATH/linux/libxm-linux/common/config.mk.dist $TARGET_PATH/linux/libxm-linux/common/config.mk
+	#sed -i "s|XTRATUM_PATH[ ]*=.*|XTRATUM_PATH=$TARGET_PATH/xm|" $TARGET_PATH/linux/libxm-linux/common/config.mk.dist
+	#sed -i "s|LIBXMLINUX_PATH[ ]*=.*|LIBXMLINUX_PATH=$TARGET_PATH/linux/libxm-linux|" $TARGET_PATH/linux/libxm-linux/common/config.mk.dist
+	#cp $TARGET_PATH/linux/libxm-linux/common/config.mk.dist $TARGET_PATH/linux/libxm-linux/common/config.mk
 
+	# xm-examples/common/config.mk
+	#sed -i "s|XTRATUM_PATH[ ]*=.*|XTRATUM_PATH=$TARGET_PATH/xm|" $TARGET_PATH/xm-examples/common/config.mk.dist
+	#cp $TARGET_PATH/xm-examples/common/config.mk.dist $TARGET_PATH/xm-examples/common/config.mk
 fi
 
 quit 0

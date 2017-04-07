@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -63,7 +63,8 @@ void InitIdle(kThread_t *idle, xm_s32_t cpu) {
 void StartUpGuest(void *entry, xmAddress_t stack) {
     localSched_t *sched=GET_LOCAL_SCHED();
 
-    KTHREAD_ARCH_INIT(sched->cKThread, stack);
+    //KTHREAD_ARCH_INIT(sched->cKThread, stack);
+    KThreadArchInit(sched->cKThread);
     XMAtomicSet(&sched->cKThread->ctrl.g->partitionControlTable->iFlags, 0);
     ResumeVClock(&sched->cKThread->ctrl.g->vClock, &sched->cKThread->ctrl.g->vTimer);
 
@@ -104,9 +105,9 @@ kThread_t *CreatePartition(struct xmcPartition *conf) {
     k->ctrl.g->watchdogTimer=AllocKTimer(KThrWatchdogTimerHndl, k, k);
     InitVTimer(&k->ctrl.g->vTimer, k);
     k->ctrl.g->cfg=conf;
-    SET_KTHREAD_FLAG(k, KTHREAD_HALTED_F);
     ArchCreatePartition(k);
     partitionTab[k->ctrl.g->cfg->id]=k;
+    HALT_PARTITION(k->ctrl.g->cfg->id);
 
     return k;
 }
@@ -131,7 +132,7 @@ static inline void FillPartInfTab(partitionInformationTable_t *partInfTab, struc
  
     //memcpy(memAreaTab, &xmcPhysMemAreaTab[cfg->physicalMemoryAreasOffset], sizeof(struct xmcMemoryArea)*cfg->noPhysicalMemoryAreas);
 }
-
+#define CHECKPOINT()    kprintf("[%s:%d]\n", __FUNCTION__, __LINE__)
 xm_s32_t ResetPartition(kThread_t *k, xm_u32_t cold, xm_u32_t status) {
     partitionInformationTable_t *partInfTab;
     localSched_t *sched=GET_LOCAL_SCHED();

@@ -11,9 +11,9 @@ include $(XTRATUM_PATH)/core/rules.mk
 -include dep.mk
 
 objs: $(OBJS)
-	@$(LD) $(LDFLAGS) -r -o kern.o $(LOBJS)
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -r -o kern.o $(LOBJS)
 
-#	$(CC) $(filter-out -pg,$(CFLAGS)) -c gprof.c
+#	$(TARGET_CC) $(filter-out -pg,$(TARGET_CFLAGS)) -c gprof.c
 
 .c.s:
-	$(CC) $(CFLAGS) -S -o $*.s $<
+	$(TARGET_CC) $(TARGET_CFLAGS) -S -o $*.s $<

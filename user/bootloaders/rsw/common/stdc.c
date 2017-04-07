@@ -8,7 +8,7 @@
  * Author: Salva Peiró <speiro@ai2.upv.es>
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -18,12 +18,26 @@
 xm_s32_t xprintf(const char *fmt, ...){return 0;}
 #else
 
+char *strcpy(char *dest, const char* src) {
+    xm_s8_t *ret = dest;
+    while ((*dest++ = *src++))
+        ;
+    return ret;
+}
+
+xm_u32_t strlen(const char *s) {
+    xm_u32_t i;
+    for (i = 0; s && s[i] != '\0'; i++)
+        ;
+    return i;
+}
+
 static void uartputs(char *s, int n)
 {
     int i;
 
     for(i=0; i<n; i++)
-        ConsolePutChar(s[i]);
+        xputchar(s[i]);
 }
 
 #define SCRATCH 32

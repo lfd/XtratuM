@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -21,7 +21,6 @@
 #include <xm_inc/linkage.h>
 #include <xm_inc/hypercalls.h>
 #include <xm_inc/objdir.h>
-#include <xm_inc/objects/mem.h>
 
 __stdcall xm_s32_t XM_write_console(char *buffer, xm_s32_t length) {
     return XM_write_object(OBJDESC_BUILD(OBJ_CLASS_CONSOLE, XM_PARTITION_SELF, 0), buffer, length, 0);

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -105,3 +105,6 @@ HYPERCALL_TAB(OverrideTrapHndlSys, 2);
 HYPERCALL_TAB(RaiseIPVISys, 2);
 HYPERCALL_TAB(Ia32UpdateSysStructSys, 3);
 HYPERCALL_TAB(Ia32SetIdtDescSys, 2);
+#ifdef CONFIG_SPARE_SCHEDULING
+HYPERCALL_TAB(SetSpareGuestSys, 3);
+#endif

@@ -13,16 +13,16 @@ include $(XTRATUM_PATH)/user/install.mk
 SRCS=main.c $(ARCH)/elf.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))
 
-HOSTCFLAGS+=$(CFLAGS_ARCH)
+HOST_CFLAGS+=$(CFLAGS_ARCH)
 
 %.o: %.c
-	$(HOSTCC) $(HOSTCFLAGS) -o $@ -c $<
+	$(HOST_CC) $(HOST_CFLAGS) -o $@ -c $<
 
 %.o: %.S
-	$(HOSTCC) $(HOSTASFLAGS) -o $@ -c $<
+	$(HOST_CC) $(HOSTASFLAGS) -o $@ -c $<
 
 elf2xef: $(OBJS)
-	$(HOSTCC) $(HOSTCFLAGS) -o $@ $(OBJS)
+	$(HOST_CC) $(HOST_CFLAGS) -o $@ $(OBJS)
 
 clean:
 	@$(RM) -f *.o *~ elf2xef $(ARCH)/*~ $(ARCH)/*.o dephost.mk

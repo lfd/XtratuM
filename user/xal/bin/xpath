@@ -1,11 +1,7 @@
 #!/bin/bash
-# $Description: 
-# 	xpath obtains the conf params from the xml files using a standarized notation.
-# 	usage: xpath [-c] [-f file] [-n nspace] <xpath_query>
-# Created by speiro <speiro@ai2.upv.es>
-# $Id: xpath, 2012/09/24.
-# $License: Read LICENSE.txt file for the license terms.
-#
+# usage: xpath [-c] [-f file] [-n nspace] <xpath_query>
+# descr: xpath obtains the conf params from the xml files using a standarized notation.
+# author: Salva Peiro <speiro@ai2.upv.es>
 
 prog=$(basename $0)
 nspaces=

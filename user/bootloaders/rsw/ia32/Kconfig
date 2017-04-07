@@ -6,10 +6,14 @@ menu "RSW memory layout"
 
 config LOAD_ADDR
        hex "Load address"
-       default "0x2000000"
+       default "0x1000000"
+
+config CONTAINER_ADDR
+        hex "Container Load Address"
+        default "0x1002000"
 
 endmenu
 
-#config OUTPUT_ENABLED
-#       bool "Enable RSW output"
-#       default n
+config OUTPUT_ENABLED
+       bool "Enable RSW output"
+       default n

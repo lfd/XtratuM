@@ -116,9 +116,15 @@ ENTRY(xmPgt)
 	/* [0 - XM_VMAP_SIZE [ */
 	.zero ((XM_VMAPSIZE/(PAGE_SIZE))*4)
 
+ENTRY(xmPhys)
+	.zero PAGE_SIZE
+
 /* The XM's IDT */
 ENTRY(xmIdt)
 	.zero (IDT_ENTRIES*8)
+
+ENTRY(triggerStore)
+    .long 0
 
 __idle_kthread:
 	.zero CONFIG_KSTACK_SIZE

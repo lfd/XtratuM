@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Salva Peiró <speiro@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -88,7 +88,7 @@ char *strchr(const char *s, int c) {
 
 #ifndef __ARCH_MEMCPY
 
-void *memcpy(void *dest, const void  src, xm_u32_t n) {
+void *memcpy(void *dest, const void *src, xm_u32_t n) {
     xm_s8_t *dp = dest;
     const xm_s8_t *sp = src;
     while (n--)

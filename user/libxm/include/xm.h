@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -48,9 +48,6 @@ static inline partitionControlTable_t *XM_params_get_PCT(void) {
 #include <hypervisor.h>
 #include <trace.h>
 #include <status.h>
-#ifdef CONFIG_SPARE_SCHEDULING
-#include <spare.h>
-#endif
 
 #endif
 

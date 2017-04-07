@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -23,26 +23,15 @@
 
 void SwitchKThreadArchPre(kThread_t *new, kThread_t *current) {
     if (current->ctrl.g) {
-	SavePgd(current->ctrl.g->kArch.pgd);
+        SavePgd(current->ctrl.g->kArch.pgd);
     }
-    if(new->ctrl.g) {
-	LoadGdt(new->ctrl.g->kArch.gdtr);
-	LoadIdt(new->ctrl.g->kArch.idtr);
-	xmTss[GET_CPU_ID()].t.ss1=new->ctrl.g->kArch.tss.ss1;
-	xmTss[GET_CPU_ID()].t.esp1=new->ctrl.g->kArch.tss.esp1;
-	xmTss[GET_CPU_ID()].t.ss2=new->ctrl.g->kArch.tss.ss2;
-	xmTss[GET_CPU_ID()].t.esp2=new->ctrl.g->kArch.tss.esp2;
-
-	if (new->ctrl.g->cfg->noIoPorts>0) {
-	    memcpy(xmTss[GET_CPU_ID()].ioMap, xmcIoPortTab[new->ctrl.g->cfg->ioPortsOffset].map, 2048*sizeof(xm_u32_t));
-	    EnableTssIoMap(&xmTss[GET_CPU_ID()]);
-	} else
-	    DisableTssIoMap(&xmTss[GET_CPU_ID()]);
-	
-	LoadPgd(new->ctrl.g->kArch.pgd);
+    if (new->ctrl.g) {
+        LoadGdt(new->ctrl.g->kArch.gdtr);
+        LoadIdt(new->ctrl.g->kArch.idtr);
+        LoadPgd(new->ctrl.g->kArch.pgd);
+        TssClearBusy(&new->ctrl.g->kArch.gdtr, TSS_SEL);
+        LoadTr(TSS_SEL);
     }
-    //xmTss[GET_CPU_ID()].t.ss0=XM_DS;
-    xmTss[GET_CPU_ID()].t.esp0=(xm_u32_t)&new->kStack[CONFIG_KSTACK_SIZE-4];
     LoadCr0(DEFAULT_CR0);
 }
 
@@ -56,18 +45,29 @@ void ArchCreatePartition(kThread_t *k) {
     ASSERT(k->ctrl.g);
     memcpy((xm_u8_t *)k->ctrl.g->kArch.gdtTab, (xm_u8_t *)xmGdt, sizeof(gdtDesc_t)*(XM_GDT_ENTRIES+CONFIG_PARTITION_NO_GDT_ENTRIES));
 
-    k->ctrl.g->kArch.gdtr=(pseudoDesc_t){
-	.limit=(sizeof(gdtDesc_t)*(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES))-1,
-	.linearBase=(xm_u32_t)k->ctrl.g->kArch.gdtTab,
-    };
+    k->ctrl.g->kArch.gdtr.limit=(sizeof(gdtDesc_t)*(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES))-1;
+    k->ctrl.g->kArch.gdtr.linearBase=(xm_u32_t)k->ctrl.g->kArch.gdtTab;
 
     k->ctrl.g->kArch.cr0=DEFAULT_CR0;
     
     memcpy(k->ctrl.g->kArch.idtTab, xmIdt, sizeof(genericDesc_t)*IDT_ENTRIES);
-    k->ctrl.g->kArch.idtr=(pseudoDesc_t){
-	.limit=(sizeof(genericDesc_t)*IDT_ENTRIES)-1,
-	.linearBase=(xm_u32_t)k->ctrl.g->kArch.idtTab,
-    };    
+
+    k->ctrl.g->kArch.idtr.limit=(sizeof(genericDesc_t)*IDT_ENTRIES)-1;
+    k->ctrl.g->kArch.idtr.linearBase=(xm_u32_t)k->ctrl.g->kArch.idtTab;
+
+    if (k->ctrl.g->cfg->noIoPorts>0) {
+        memcpy(k->ctrl.g->kArch.tss.ioMap, xmcIoPortTab[k->ctrl.g->cfg->ioPortsOffset].map, 2048*sizeof(xm_u32_t));
+        EnableTssIoMap(&k->ctrl.g->kArch.tss);
+    } else
+        DisableTssIoMap(&k->ctrl.g->kArch.tss);
+    LoadTssDesc((desc_t *)&k->ctrl.g->kArch.gdtTab[TSS_SEL>>3], &k->ctrl.g->kArch.tss);
+}
+
+void KThreadArchInit(kThread_t *k) {
+    __asm__ __volatile__ ("finit\n\t" ::);
+    k->ctrl.g->kArch.tss.t.ss0=XM_DS;
+    k->ctrl.g->kArch.tss.t.esp0=(xmAddress_t)&k->kStack[CONFIG_KSTACK_SIZE-4];
+    SetWp();
 }
 
 void FillArchPartitionCtrlTab(kThread_t *k, partitionControlTable_t *partitionCtrlTab) {
@@ -83,7 +83,7 @@ void FillArchPartitionCtrlTab(kThread_t *k, partitionControlTable_t *partitionCt
 	k->ctrl.g->partitionControlTable->hwIrq2Vector[e]=e+0x20;
     
     for (e=0; e<XM_VT_EXT_MAX; e++)
-	k->ctrl.g->partitionControlTable->extIrq2Vector[e]=0x90+e;
+	k->ctrl.g->partitionControlTable->extIrq2Vector[e]=e+0x90;
 }
 
 void FillArchPartitionInfTab(kThread_t *k, partitionInformationTable_t *partitionInfTab) {

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -51,12 +51,7 @@ typedef xm_u32_t xmObjDesc_t;
 #define OBJ_CLASS_HM 7
 #define OBJ_CLASS_STATUS 8
 #define OBJ_CLASS_UART 9
-#ifdef CONFIG_SPARE_SCHEDULING
-#define OBJ_CLASS_SPARE 10
-#define OBJ_NO_CLASSES 11
-#else
 #define OBJ_NO_CLASSES 10
-#endif
 
 #ifdef _XM_KERNEL_
 

@@ -100,7 +100,7 @@
 #define CS_IC_SP 56
 #define CS_IPI_SP 52
 	
-#define EFLAGS_SC_SP 52
+#define EFLAGS_SC_SP 60
 #define EAX_SP 24
 
 #define IRET_FRAME_SC_SP 44
@@ -167,8 +167,8 @@
 	movl %edx, %es
 	xorl %edx, %edx
 	movl %edx, %fs
-	movl $(PERCPU_SEL), %edx
 	movl %edx,%gs
+	//movl $(PERCPU_SEL), %edx
 .endm
 	
 .macro HW_RESTORE_ALL
@@ -286,6 +286,7 @@ TABLE_END trapHndl
 Common\hndlr\()Body:
        	HW_SAVE_ALL
        	ROLLBACK_STACK
+       	movl $1, triggerStore
        	CHECK_USER_CTXT 1f, CS_IC_SP
        	CLEAR_WP 
 1:      pushl %esp
@@ -308,14 +309,10 @@ COMMON_BODY Trap
 /* XM's system calls */
 ENTRY(HypercallHandler)
     cli
-    HW_SAVE_REGS
-    movl $(XM_DS),%edx
-    movl %edx,%ds
-    movl %edx,%es
-    xorl %edx,%edx
-    movl %edx,%fs
-    movl $(PERCPU_SEL),%edx
-    movl %edx,%gs
+    pushl $0    /* Dummy push to match irqCtxt_t */
+	pushl $0
+	HW_SAVE_ALL
+
     ROLLBACK_STACK	
     CLEAR_WP
 // fixing the stack frame (EFLAGS hasn't been stored yet)
@@ -343,8 +340,11 @@ ENTRY(HypercallHandler)
     movl $-1, EAX_SP(%esp)
 
 2:
+	pushl %esp
+	call __EmulIrq
+	addl $4, %esp
     SET_WP
-    HW_RESTORE_REGS
+    HW_RESTORE_ALL
     iret
 	
 .text
@@ -364,6 +364,32 @@ ENTRY(UnexpectedIrq)
     SET_WP
 1:  HW_RESTORE_ALL
     iret
+
+.section .text.phys, "a"
+ENTRY(_MemcpyPhys)
+    pushl %esi
+    pushl %edi
+    pushl %ecx
+    pushl %edx
+    movl 0x14(%esp),%edi
+    movl 0x18(%esp),%esi
+    movl 0x1c(%esp),%ecx
+
+    movl %cr0,%edx
+    andl $(~CR0_PG),%edx
+    movl %edx,%cr0
+
+    rep movsb
+
+    movl %cr0,%edx
+    orl $CR0_PG,%edx
+    movl %edx,%cr0
+
+    popl %edx
+    popl %ecx
+    popl %edi
+    popl %esi
+    ret
 
 .data
 	

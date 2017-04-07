@@ -4,10 +4,10 @@ all:
 
 include ../../xmconfig
 
-HOSTCFLAGS = -Wall -O2 -D$(ARCH) -Wno-unused-value -Wno-unused-but-set-variable
+HOST_CFLAGS = -Wall -O2 -D$(ARCH) -Wno-unused-value -Wno-unused-but-set-variable
 
 %.o: %.c
-	@$(HOSTCC) $(HOSTCFLAGS) -o $@ -c $<
+	@$(HOST_CC) $(HOST_CFLAGS) -o $@ -c $<
 
 Kconfig := kernel/$(ARCH)/Kconfig
 
@@ -16,21 +16,21 @@ lxdialog += lxdialog/textbox.o lxdialog/yesno.o lxdialog/menubox.o
 check-lxdialog := $(XTRATUM_PATH)/scripts/kconfig/lxdialog/check-lxdialog.sh
 
 HOST_EXTRACFLAGS = $(shell $(CONFIG_SHELL) $(check-lxdialog) -ccflags)
-HOST_EXTRALIBS = $(shell $(CONFIG_SHELL) $(check-lxdialog) -ldflags $(HOSTCC))
+HOST_EXTRALIBS = $(shell $(CONFIG_SHELL) $(check-lxdialog) -ldflags $(HOST_CC))
 
-HOSTCFLAGS += $(HOST_EXTRACFLAGS) -DLOCALE
+HOST_CFLAGS += $(HOST_EXTRACFLAGS) -DLOCALE
 
 conf-objs := conf.o zconf.tab.o
 mconf-objs := mconf.o zconf.tab.o $(lxdialog)
 
 dochecklxdialog:
-	@$(CONFIG_SHELL) $(check-lxdialog) -check $(HOSTCC) $(HOST_EXTRACFLAGS) $(HOST_EXTRALIBS)
+	@$(CONFIG_SHELL) $(check-lxdialog) -check $(HOST_CC) $(HOST_EXTRACFLAGS) $(HOST_EXTRALIBS)
 
 mconf: dochecklxdialog $(mconf-objs)
-	@$(HOSTCC) $(HOST_EXTRACFLAGS) -o $@ $(mconf-objs) $(HOST_EXTRALIBS)
+	@$(HOST_CC) $(HOST_EXTRACFLAGS) -o $@ $(mconf-objs) $(HOST_EXTRALIBS)
 
 conf: $(conf-objs)
-	@$(HOSTCC) $(HOST_EXTRACFLAGS) -o $@ $(conf-objs) $(HOST_EXTRALIBS)
+	@$(HOST_CC) $(HOST_EXTRACFLAGS) -o $@ $(conf-objs) $(HOST_EXTRALIBS)
 
 #LKC_GENPARSER := 1
 

@@ -2,14 +2,9 @@
 
 LINUX_FILES=\
 (
-	user/linux/loader
-	user/linux/loader/Makefile
-	user/linux/loader/lib/
-	user/linux/loader/lib/loader.lds
-	user/linux/loader/lib/liblinuxloader.a
 
-    `[ -e user/linux/loader/linuxloader-server ] && echo user/linux/loader/linuxloader-server`
-    `[ -e user/linux/loader/linuxloader-client ] && echo user/linux/loader/linuxloader-client`
+    #`[ -e user/linux/loader/linuxloader-server ] && echo user/linux/loader/linuxloader-server`
+    #`[ -e user/linux/loader/linuxloader-client ] && echo user/linux/loader/linuxloader-client`
 
     user/linux/bin
     user/linux/bin/mkinitramfs
@@ -141,7 +136,7 @@ done
 (cd $targetdir/user/linux/initrd-root/bin && rm -f sh && ln -s busybox sh)
 
 mv $targetdir/user/linux/* $targetdir/
-sed -i "s|^LINUXLOADER_PATH[ ]*=.*|LINUXLOADER_PATH=\$(XTRATUM_PATH)/../linux/loader|" $targetdir/loader/Makefile
+#sed -i "s|^LINUXLOADER_PATH[ ]*=.*|LINUXLOADER_PATH=\$(XTRATUM_PATH)/../linux/loader|" $targetdir/loader/Makefile
 sed -i "s|^LIBXM_PATH[ ]*=.*|LIBXM_PATH=\$(XTRATUM_PATH)/|" $targetdir/libxm-linux/common/rules.mk
 
 rm -r $targetdir/user

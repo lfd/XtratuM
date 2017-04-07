@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -22,6 +22,10 @@ __stdcall xm_s32_t XM_system_get_status(xmSystemStatus_t *status) {
 
 __stdcall xm_s32_t XM_partition_get_status(xmId_t id, xmPartitionStatus_t *status) {
     return XM_ctrl_object(OBJDESC_BUILD(OBJ_CLASS_STATUS, id, 0), XM_STATUS_GET, status);
+}
+
+__stdcall xm_s32_t XM_set_partition_opmode(xm_s32_t opMode) {
+    return XM_ctrl_object(OBJDESC_BUILD(OBJ_CLASS_STATUS, XM_PARTITION_SELF, 0), XM_SET_PARTITION_OPMODE, &opMode);
 }
 
 __stdcall xm_s32_t XM_set_plan(xm_u32_t planId) {

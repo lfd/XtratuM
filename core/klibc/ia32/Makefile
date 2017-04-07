@@ -10,4 +10,4 @@ OBJS := $(patsubst %.c,%.o,$(wildcard *.c))
 LOBJS := $(OBJS)
 
 objs: $(OBJS)
-	@$(LD) $(LDFLAGS) -r -o arch_libc.o $(LOBJS)
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -r -o arch_libc.o $(LOBJS)

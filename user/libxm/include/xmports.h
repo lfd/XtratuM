@@ -8,7 +8,7 @@
  * Author: Jordi Sánchez, <jsanchez@ai2.upv.es>
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 

@@ -3,10 +3,10 @@
  *
  * Hypercalls definition
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -67,19 +67,21 @@
 #define set_page_type_nr __SET_PAGE_TYPE_NR
 #define override_trap_hndl_nr __OVERRIDE_TRAP_HNDL_NR
 #define raise_ipvi_nr __RAISE_IPVI_NR
+#define set_spare_guest_nr __SET_SPARE_GUEST_NR
 
 // Returning values
 
 /* <track id="error-codes-list"> */
 #define XM_OK                 (0)
-#define XM_UNKNOWN_HYPERCALL (-1)
-#define XM_INVALID_PARAM     (-2)
-#define XM_PERM_ERROR        (-3)
-#define XM_INVALID_CONFIG    (-4)
-#define XM_INVALID_MODE      (-5)
-#define XM_NOT_AVAILABLE     (-6)
-#define XM_OP_NOT_ALLOWED    (-7)
-#define XM_MULTICALL_ERROR   (-8)
+#define XM_NO_ACTION         (-1)
+#define XM_UNKNOWN_HYPERCALL (-2)
+#define XM_INVALID_PARAM     (-3)
+#define XM_PERM_ERROR        (-4)
+#define XM_INVALID_CONFIG    (-5)
+#define XM_INVALID_MODE      (-6)
+#define XM_NOT_AVAILABLE     (-7)
+#define XM_OP_NOT_ALLOWED    (-8)
+#define XM_MULTICALL_ERROR   (-9)
 /* </track id="error-codes-list"> */
 
 #ifndef __ASSEMBLY__

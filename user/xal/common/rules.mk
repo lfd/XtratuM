@@ -61,8 +61,8 @@ LIB_XM=-lxm
 LIB_XAL=-lxal
 
 #FLAGS
-CFLAGS += -I$(XAL_PATH)/include -fno-builtin
-LDFLAGS += -u start -u __xmImageHdr -T$(XALLIB_PATH)/loader.lds\
+TARGET_CFLAGS += -I$(XAL_PATH)/include -fno-builtin
+TARGET_LDFLAGS += -u start -u __xmImageHdr -T$(XALLIB_PATH)/loader.lds\
 	-L$(LIBXM_PATH) -L$(XALLIB_PATH)\
 	--start-group $(LIBGCC) $(LIB_XM) $(LIB_XAL) --end-group
 
@@ -96,6 +96,7 @@ distclean: clean
 
 clean:
 	@$(RM) $(PARTITIONS) $(patsubst %.bin,%, $(PARTITIONS)) $(patsubst %.xef,%, $(PARTITIONS))
+	@$(RM) -f resident_sw.iso
 	@find -name "*.xef" -exec $(RM) '{}' \;
 	@find \( -name '*.a' -o -name '*.o' -o -name '*.xmc' -o -name 'dep.mk' \) -exec $(RM) '{}' \;
 	@find \( -name '*.bin' -o -name resident_sw -o -name linuxloader -o -name xm_cf -o -name '*.gz' \) -exec rm '{}' \;

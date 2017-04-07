@@ -25,11 +25,15 @@ XAL=\
 
 	user/xal/examples
 	user/xal/examples/Makefile
-
-	user/xal/examples/l0x1-hello_world/{.,Makefile,xm_cf.*.xml,*.c}
-	user/xal/examples/l2x0-2linux/{.,README,Makefile,xm_cf.*.xml,cmdline*.txt}
-	user/xal/examples/l3x0-3linux/{.,README,Makefile,xm_cf.*.xml,cmdline*.txt}
-	user/xal/examples/l0x3-hmmonitor/{.,README,Makefile,xm_cf.*.xml,*.c,*.h}
+	
+	user/xal/examples/hello_world/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.001/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.002/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.003/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.004/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.005/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.006/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
+	user/xal/examples/example.007/{.,Makefile,xm_cf.*.xml,*.c,*.txt}
 )
 
 progname=$(basename $0)

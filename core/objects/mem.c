@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -41,6 +41,7 @@ static inline xm_s32_t CopyMem(void *dst, void *src, xm_s32_t size) {
     }
     return size;
 }
+
 static xm_s32_t ReadMem(xmObjDesc_t desc, xm_u8_t *dst, xmSize_t size, xm_u8_t *src) {
     localSched_t *sched=GET_LOCAL_SCHED();
     xmAddress_t sAddr, eAddr;

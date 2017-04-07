@@ -18,12 +18,11 @@ OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
 OUTPUT_ARCH("i386")
 ENTRY(_start)
 
-BOOT_START = 0x00100000;
 XM_OFFSET = CONFIG_XM_OFFSET;
 
 SECTIONS
 {
-    . = BOOT_START;
+    . = CONFIG_XM_LOAD_ADDR;
     _sxm = . + XM_OFFSET;
     .boot ALIGN(0x1000) : {
         _sboot = .;
@@ -31,6 +30,12 @@ SECTIONS
 	*(.boot.text)
 	*(.boot.data)
         _eboot = .;
+    }
+    
+    .text.phys ALIGN(0x1000) : {
+        _sphys = .;
+    	*(.text.phys)
+        _ephys = .;
     }
 
     . = . + XM_OFFSET;

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -99,73 +99,82 @@ xm_s32_t __VBOOT SetupHm(void) {
 REGISTER_OBJ(SetupHm);
 
 xm_s32_t HmRaiseEvent(xmHmLog_t *log) {
-    xm_s32_t propagate=0;
+    xm_s32_t propagate = 0;
     ASSERT((log->eventId>=0)&&(log->eventId<XM_HM_MAX_EVENTS));
 #ifdef CONFIG_OBJ_STATUS_ACC
     systemStatus.noHmEvents++;
 #endif
-    log->timeStamp=GetSysClockUsec();
+    log->timeStamp = GetSysClockUsec();
+#if CONFIG_OBJ_HM_VERBOSE
     kprintf("[HM:%lld] event %d: sys %d: Id %d\n", log->timeStamp, log->eventId, log->system, log->partitionId);
     kprintf("0x%x 0x%x 0x%x\n", log->word[0], log->word[1], log->word[2]);
     kprintf("0x%x 0x%x\n", log->word[3], log->word[4]);
+#endif
     if (log->system) {
-	if (xmcTab.hpv.hmTab[log->eventId].log)
-	    LogStreamInsert(&hmLogStream, log);
-	switch(xmcTab.hpv.hmTab[log->eventId].action) {
-	case XM_HM_AC_IGNORE:
-	    // Doing nothing
-	    break;
-	case XM_HM_AC_COLD_RESET:
-	    HaltSystem();
-	    break;
-	case XM_HM_AC_WARM_RESET:
-	    HaltSystem();
-	    break;
-	case XM_HM_AC_HALT:
-	    HaltSystem();
-	    break;
-	default:
-	    SystemPanic(0, 0, "Unknown health-monitor action %d\n", xmcTab.hpv.hmTab[log->eventId].action);
-	}
+        if (xmcTab.hpv.hmTab[log->eventId].log)
+            LogStreamInsert(&hmLogStream, log);
+        switch (xmcTab.hpv.hmTab[log->eventId].action) {
+        case XM_HM_AC_IGNORE:
+            // Doing nothing
+            break;
+        case XM_HM_AC_COLD_RESET:
+            HaltSystem();
+            break;
+        case XM_HM_AC_WARM_RESET:
+            HaltSystem();
+            break;
+        case XM_HM_AC_HALT:
+            HaltSystem();
+            break;
+        default:
+            SystemPanic(0, 0, "Unknown health-monitor action %d\n", xmcTab.hpv.hmTab[log->eventId].action);
+        }
     } else {
-	if (partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].log)
-	    LogStreamInsert(&hmLogStream, log);
+        if (partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].log)
+            LogStreamInsert(&hmLogStream, log);
 
-	ASSERT((log->partitionId>=0)&&(log->partitionId<xmcTab.noPartitions));
-	ASSERT(partitionTab[log->partitionId]);
-	switch(partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].action) {
-	case XM_HM_AC_IGNORE:
-	    // Doing nothing
-	    break;
-	case XM_HM_AC_SHUTDOWN:
-	    SetExtIrqPending(partitionTab[log->partitionId], XM_VT_EXT_SHUTDOWN);
-	    break;
-	case XM_HM_AC_COLD_RESET:
-	    kprintf("[HM] Partition %d cold reseted\n", log->partitionId);
-	    ResetPartition(partitionTab[log->partitionId], 1, log->eventId);
-	    break;
-	case XM_HM_AC_WARM_RESET:
-	    kprintf("[HM] Partition %d warm reseted\n", log->partitionId);
-	    ResetPartition(partitionTab[log->partitionId], 0, log->eventId);
-	    break;
-	case XM_HM_AC_SUSPEND:
-	    ASSERT(log->partitionId!=XM_HYPERVISOR_ID);
-	    kprintf("[HM] Partition %d suspended\n", log->partitionId);
-	    CLEAR_KTHREAD_FLAG(partitionTab[log->partitionId], KTHREAD_READY_F);
-	    Scheduling();
-	    break;
-	case XM_HM_AC_HALT:
-	    ASSERT(log->partitionId!=XM_HYPERVISOR_ID);
-	    kprintf("[HM] Partition %d halted\n", log->partitionId);
-	    SET_KTHREAD_FLAG(partitionTab[log->partitionId], KTHREAD_HALTED_F);
-	    Scheduling();
-	    break;
-	case XM_HM_AC_PROPAGATE:
-	    propagate=1;
-	    break;
-	default:
-	    SystemPanic(0, 0, "Unknown health-monitor action %d\n", partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].action);
-	}
+        ASSERT((log->partitionId>=0)&&(log->partitionId<xmcTab.noPartitions));
+        ASSERT(partitionTab[log->partitionId]);
+        switch (partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].action) {
+        case XM_HM_AC_IGNORE:
+            // Doing nothing
+            break;
+        case XM_HM_AC_SHUTDOWN:
+		SHUTDOWN_PARTITION(log->partitionId);
+            break;
+        case XM_HM_AC_COLD_RESET:
+            kprintf("[HM] Partition %d cold reseted\n", log->partitionId);
+            if (ResetPartition(partitionTab[log->partitionId], 1, log->eventId)<0) {
+                HALT_PARTITION(log->partitionId);
+                Scheduling();
+            }
+            break;
+        case XM_HM_AC_WARM_RESET:
+            kprintf("[HM] Partition %d warm reseted\n", log->partitionId);
+            if (ResetPartition(partitionTab[log->partitionId], 0, log->eventId)<0) {
+                HALT_PARTITION(log->partitionId);
+                Scheduling();
+            }
+            break;
+        case XM_HM_AC_SUSPEND:
+            ASSERT(log->partitionId!=XM_HYPERVISOR_ID);
+            kprintf("[HM] Partition %d suspended\n", log->partitionId);
+            SUSPEND_PARTITION(log->partitionId);
+            Scheduling();
+            break;
+        case XM_HM_AC_HALT:
+            ASSERT(log->partitionId!=XM_HYPERVISOR_ID);
+            kprintf("[HM] Partition %d halted\n", log->partitionId);
+            HALT_PARTITION(log->partitionId);
+            Scheduling();
+            break;
+        case XM_HM_AC_PROPAGATE:
+            propagate = 1;
+            break;
+        default:
+            SystemPanic(0, 0, "Unknown health-monitor action %d\n",
+                        partitionTab[log->partitionId]->ctrl.g->cfg->hmTab[log->eventId].action);
+        }
     }
 
     return propagate;

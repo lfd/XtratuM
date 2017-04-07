@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -20,5 +20,6 @@
 #define XM_DEV_LOGSTORAGE_ID 0x0
 #define XM_DEV_PC_VGA_ID 0x2
 #define XM_DEV_PC_UART_ID 0x3
+#define XM_DEV_PC_WB_ID 0x4
 
 #endif

@@ -69,14 +69,14 @@ OFILE=$2
 buildsummary
 
 touch tmp.S
-$CC $CFLAGS_ARCH -c tmp.S
+$TARGET_CC $TARGET_CFLAGS_ARCH -c tmp.S
 
-$OBJCOPY --add-section=.container=$CONTAINER --set-section-flags=.container=load,alloc tmp.o
+$TARGET_OBJCOPY --add-section=.container=$CONTAINER --set-section-flags=.container=load,alloc tmp.o
 
 RSW_PATH=$XTRATUM_PATH/user/bootloaders/rsw
-LIBGCC=`$CC -print-libgcc-file-name $CFLAGS_ARCH `
-LDFLAGS="-T$RSW_PATH/$ARCH/rsw.lds $LDFLAGS_ARCH $LIBGCC"
-$LD -n -S -o $OFILE $RSW_PATH/rsw_objs.o $LDFLAGS tmp.o
+LIBGCC=`$TARGET_CC -print-libgcc-file-name $TARGET_CFLAGS_ARCH `
+LDFLAGS="-T$RSW_PATH/$ARCH/rsw.lds $TARGET_LDFLAGS_ARCH $LIBGCC"
+$TARGET_LD -n -S -o $OFILE $RSW_PATH/rsw_objs.o $LDFLAGS tmp.o
 
 chmod -x $OFILE
 rm -f tmp.S tmp.o

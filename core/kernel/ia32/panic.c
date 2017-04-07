@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 /*
@@ -174,7 +174,8 @@ void PartitionPanic(xm_s8_t from, void *regs, xm_s8_t *fmt, ...) {
     HmRaiseEvent(&hmLog);
 
     // Finish current kthread
-    SET_KTHREAD_FLAG(sched->cKThread, KTHREAD_HALTED_F);
+    HALT_PARTITION(sched->cKThread->ctrl.g->cfg->id);
+
     if (sched->cKThread==sched->idleKThread)
 	SystemPanic(from, regs, "Idle thread triggered a PANIC???");
     Scheduling();

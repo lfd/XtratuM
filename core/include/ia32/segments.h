@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -165,14 +165,22 @@ extern void CopyIoMap(xm_u32_t *dst, xm_u32_t *src);
 
 /* XM's GDT */
 extern gdtDesc_t earlyXmGdt[EARLY_XM_GDT_ENTRIES];
-extern gdtDesc_t xmGdt[(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES)*CONFIG_NO_CPUS];
+extern gdtDesc_t xmGdt[(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES)];
 
-extern ioTss_t xmTss[CONFIG_NO_CPUS];
-
-#define Entry2XmGdtEntry(e) ((XM_GDT_ENTRIES*GET_CPU_ID())+(e))
+extern ioTss_t xmTss;
 
 /* XM's IDT */
 extern gateDesc_t xmIdt[IDT_ENTRIES];
+
+static inline void LoadTssDesc(desc_t *desc, ioTss_t *tss) {
+    desc->limitLow=0xffff&(sizeof(ioTss_t)-1);
+    desc->limitHigh=0xf&((sizeof(ioTss_t)-1)>>16);
+    desc->baseLow=(xmAddress_t)tss&0xffff;
+    desc->baseMed=((xmAddress_t)tss>>16)&0xff;
+    desc->baseHigh=((xmAddress_t)tss>>24)&0xff;
+    desc->access=0x89;
+    desc->granularity=0;
+}
 #endif
 #endif
 

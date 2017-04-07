@@ -5,7 +5,6 @@ include $(XTRATUM_PATH)/config.mk
 include $(XTRATUM_PATH)/user/rules.mk
 
 DIRS=\
-	loader\
 	libxm-linux\
 
 dirs:

@@ -5,13 +5,15 @@ include $(XTRATUM_PATH)/config.mk
 include $(XTRATUM_PATH)/user/rules.mk
 
 SRCS := $(sort $(wildcard *.c))
-OBJS := $(patsubst %.c,%.o,$(wildcard *.c))
-LOBJS := $(OBJS)
+OBJS := $(patsubst %.c,%.host.o,${SRCS})
 
--include dep.mk
+-include dephost.mk
 
-CC = $(HOSTCC)
-CFLAGS = $(HOSTCFLAGS) --include xm_inc/config.h -O2 -Wall -D_GNU_SOURCE `xml2-config --cflags`
+#HOST_CFLAGS += --include xm_inc/config.h  
+HOST_CFLAGS += $(HOST_CFLAGS_ARCH) `xml2-config --cflags` -D_GNU_SOURCE -D$(ARCH) -O2 -Wall
 
 objs: $(OBJS)
-	@$(HOSTLD) $(HOSTLDFLAGS) -r -o arch.o $(LOBJS)
+	@$(HOST_LD) $(HOST_LDFLAGS_ARCH) -r -o arch.o $(OBJS)
+
+clean:
+	@$(RM) -f *.o

@@ -16,10 +16,6 @@ config NO_HWIRQS
 config TARGET_LITTLE_ENDIAN
        def_bool y
 
-config XM_OFFSET
-       hex
-       default "0xFC000000"
-
 menu "Processor"
 
 choice
@@ -30,6 +26,16 @@ config PC_BOARD
        bool "PC"
 
 endchoice
+
+menu "Physical memory layout"
+config XM_LOAD_ADDR
+        hex
+        default "0x0100000"
+
+config XM_OFFSET
+       hex
+       default "0xFC000000"
+endmenu
 
 config NO_CPUS
        int
@@ -42,6 +48,10 @@ menu "Hypervisor arch-dependent parameters"
 config PARTITION_NO_GDT_ENTRIES
        int "Number of GDTs entries per partition"
        default "32"
+    
+config IDLE_C_STATE
+       int "Idle loop C-State (0-5)"
+       default "1"
        
 choice
        prompt "System Timer"

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -20,6 +20,7 @@
 #endif
 
 #include <kthread.h>
+#include <objects/status.h>
 
 struct cyclicData {
     kTimer_t *kTimer;
@@ -72,12 +73,35 @@ extern void Scheduling(void);
 extern void SetSchedPending(void);
 extern xm_s32_t SwitchSchedPlan(xm_s32_t newPlanId, xm_s32_t *oldPlanId);
 extern xm_s32_t AddKThread(kThread_t *k, xm_s32_t cpu);
+
+static inline void SUSPEND_PARTITION(xmId_t id) {
+    CLEAR_KTHREAD_FLAG(partitionTab[id], KTHREAD_READY_F); // KTHREAD_SUSPENDED_F
+}
+
+static inline void RESUME_PARTITION(xmId_t id) {
+    SET_KTHREAD_FLAG(partitionTab[id], KTHREAD_READY_F); // KTHREAD_SUSPENDED_F
+}
+
+static inline void IDLE_PARTITION(xmId_t id) {
+    CLEAR_KTHREAD_FLAG(partitionTab[id], KTHREAD_READY_F);
+}
+
+static inline void SHUTDOWN_PARTITION(xmId_t id) {
+    SetExtIrqPending(partitionTab[id], XM_VT_EXT_SHUTDOWN);
+}
+
+static inline void HALT_PARTITION(xmId_t id) {
+    partitionTab[id]->ctrl.g->opMode=XM_OPMODE_IDLE;
+    SET_KTHREAD_FLAG(partitionTab[id], KTHREAD_HALTED_F);
+}
+
 #ifdef CONFIG_SPARE_SCHEDULING
-#include <objects/spare.h>
-extern xm_s32_t SetSparePlan(struct xmcSchedSparePlan *newSparePlan);
-extern struct xmcSchedSparePlan *GetCurrentSparePlan(void);
-extern xm_s32_t FillSparePartitionTab(struct xmcSchedSparePlan *spareData);
-extern xm_s32_t LaunchSparePlan(void);
+struct xmcSpareHeader {
+    xmId_t partitionId;
+#define XM_SPARE_STATUS_BUSY (1<<0)
+    xm_u32_t status;
+};
+extern void SetSpareGuest(kThread_t *guest);
 #endif
 
 #endif

@@ -11,23 +11,19 @@ include $(XTRATUM_PATH)/user/install.mk
 -include dephost.mk
 
 SRCS=process_xml.c xmc.c xmcparser.c xml2c.c devices.c constraints.c hm.c
-OBJS := $(patsubst %.c,%.o,$(SRCS))
+OBJS := $(patsubst %.c,%.host.o,$(SRCS))
 
-HOSTCFLAGS += `xml2-config --cflags` -D_GNU_SOURCE -D$(ARCH)
+HOST_CFLAGS += $(HOST_CFLAGS_ARCH) `xml2-config --cflags` -D_GNU_SOURCE -D$(ARCH)
+HOST_LDFLAGS = `xml2-config --libs`
+HOST_ASFLAGS += $(HOST_ASFLAGS_ARCH)
 
-%.o: %.c
-	$(HOSTCC) $(HOSTCFLAGS) -o $@ -c $<
-
-%.o: %.S
-	$(HOSTCC) $(HOSTASFLAGS) -o $@ -c $<
-
-xmcparser: xmc.xsd sdevtab.o edevtab.o $(OBJS)
+xmcparser: xmc.xsd sdevtab.host.o edevtab.host.o $(OBJS)
 	@$(MAKE) -C $(ARCH) all
 	@$(MAKE) -C devices all
-	@$(HOSTCC) $(HOSTCFLAGS) -o $@ $(OBJS) sdevtab.o $(ARCH)/arch.o devices/devices.o edevtab.o `xml2-config --libs`
+	@$(HOST_CC) $(HOST_CFLAGS) -o $@ $(OBJS) sdevtab.host.o $(ARCH)/arch.o devices/devices.o edevtab.host.o $(HOST_LDFLAGS)
 
 xmc.xsd.in: xmc.xsd.S
-	@$(CC) $(ASFLAGS) -x assembler-with-cpp -E -P $< -o $@
+	@$(TARGET_CC) $(TARGET_ASFLAGS) -x assembler-with-cpp -E -P $< -o $@
 xmc.xsd: xmc.xsd.in
 	@$(SHELL) applyconfig.bash $(XTRATUM_PATH)/core/.config $< $@
 

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -61,6 +61,14 @@ static xm_s32_t WriteConsoleObj(xmObjDesc_t desc, char *buffer, xm_u32_t length)
 	return XM_PERM_ERROR;
 
     con=(partId==XM_HYPERVISOR_ID)?&xmCon:&partitionConTab[partId];
+
+#ifdef CONFIG_CONSOLE_SCAPE_SYMB
+    if (partId != XM_HYPERVISOR_ID) {
+        char msg[8];
+        sprintf(msg, "[P%d]", partId);
+        KDevWrite(con->dev, msg, 4);
+    }
+#endif
 
     for (e=0; e<length; e++) {
 	if (KDevWrite(con->dev, &buffer[e], 1)!=1) {

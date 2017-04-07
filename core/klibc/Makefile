@@ -9,4 +9,4 @@ include $(XTRATUM_PATH)/core/rules.mk
 -include dep.mk
 
 objs: $(OBJS)
-	@$(LD) $(LDFLAGS) -r -o libc.o $(OBJS)
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -r -o libc.o $(OBJS)

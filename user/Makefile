@@ -3,7 +3,7 @@ include ../xmconfig
 include $(XTRATUM_PATH)/config.mk
 include $(XTRATUM_PATH)/user/rules.mk
 
-XMUSR_SUBDIRS = libxm tools bootloaders/rsw xal linux libxmmanager/linux
+XMUSR_SUBDIRS = libxm tools bootloaders/rsw xal libspare #linux libxmmanager/linux
 
 .PHONY: links clean_links
 

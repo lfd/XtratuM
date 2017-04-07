@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Authors: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -116,6 +116,11 @@ union xmcSchedParams {
     struct xmcSchedCyclic cyclic;
 };
 
+#ifdef CONFIG_SPARE_SCHEDULING
+#define XM_PCT_SLOT_CYCLIC 0x0
+#define XM_PCT_SLOT_SPARE 0x1
+#endif
+
 //@% <track id="doc-xmc-memory-area">
 struct xmcMemoryArea {
     xmAddress_t startAddr;
@@ -153,10 +158,8 @@ struct xmcPartition {
 #define XM_PART_SUPERVISOR 0x100
 #define XM_PART_BOOT 0x200
 #define XM_PART_FP 0x400
-#ifdef CONFIG_SPARE_SCHEDULING
 #define XM_PART_SPARE_G 0x800
 #define XM_PART_SPARE_H 0x1000
-#endif
     xmAddress_t loadPhysAddr;
     xmAddress_t headerOffset;
     xm_s32_t noPhysicalMemoryAreas;

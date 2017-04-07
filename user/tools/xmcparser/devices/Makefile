@@ -5,15 +5,12 @@ include $(XTRATUM_PATH)/config.mk
 include $(XTRATUM_PATH)/user/rules.mk
 
 SRCS := $(sort $(wildcard *.c))
-OBJS := $(patsubst %.c,%.o,$(wildcard *.c))
+OBJS := $(patsubst %.c,%.host.o,$(wildcard *.c))
 LOBJS := $(OBJS)
 
 -include dephost.mk
 
-HOSTCFLAGS += `xml2-config --cflags` --include xm_inc/config.h -D_GNU_SOURCE
-
-%.o: %.c
-	@$(HOSTCC) $(HOSTCFLAGS) -o $@ -c $<
+HOST_CFLAGS += `xml2-config --cflags` --include xm_inc/config.h -D_GNU_SOURCE
 
 objs: $(OBJS)
-	@$(HOSTLD) $(HOSTLDFLAGS) -r -o devices.o $(LOBJS)
+	@$(HOST_LD) $(HOST_LDFLAGS_ARCH) -r -o devices.o $(LOBJS)

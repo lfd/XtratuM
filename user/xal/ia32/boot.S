@@ -19,7 +19,9 @@
 #include <xm_inc/arch/asm_offsets.h>
 
 #define NO_PGTS 8
-#define NO_IDT_ENTRIES (256+32)
+#define NO_IDT_ENTRIES 256
+#define NO_HWIRQS 16
+#define NO_EXTIRQS 32
 	
 .align 4
 .global __xmPartitionHdr
@@ -49,8 +51,6 @@ start:
 	
 	mov $_estack, %esp
 
-	call InitArch
-	
 	mov $write_register32_nr, %eax
 	mov $GDT_REG32, %ebx
 	mov $gdtDesc, %ecx
@@ -69,7 +69,8 @@ start:
 	pushl (__xmPartitionHdr+_PARTITIONCONTROLTABLE_OFFSET)
 	call init_libxm
 	addl $8, %esp
-	
+	call InitArch
+
 	call PartitionMain
 
 	mov $halt_partition_nr, %eax
@@ -108,102 +109,58 @@ start:
 	
 CommonTrapBody:
 	HW_SAVE_ALL
-	pushl 44(%esp)
-        call ExceptionHandler
-        addl $4, %esp
+	pushl %esp
+	call DoTrap
+	addl $4, %esp
 	HW_RESTORE_ALL
 	jmp XM_iret
-	
-CommonIrqBody:
-	HW_SAVE_ALL
-	pushl 44(%esp)
-        call HwIrqHandler
-        addl $4, %esp
-	HW_RESTORE_ALL
-	jmp XM_iret
-	
-CommonExtIrqBody:
-	HW_SAVE_ALL
-	pushl 44(%esp)
-        call ExtIrqHandler
-        addl $4, %esp
-	HW_RESTORE_ALL
-	jmp XM_iret
-	
-#define TAB_ST(st) \
-    .data 2; \
-    .globl st ;  \
-    .align 4 ; \
-    st :
 
-#define TAB_END() \
-   .data 2 ; \
-   .long 0 ; \
-   .previous
+.macro TABLE_START section, symbol
+.section .rodata.\section\(),"a"
+.globl \symbol\()
+.align 4
+\symbol\() :
+.endm
 
-#define BUILD_IRQ(irq) \
-    .data 2 ; \
-    .align 4 ; \
-    .long IH##irq ; \
-    .text ; \
-    .align 4 ; \
-    IH##irq: ; \
-        pushl $0 ; \
-        pushl $irq ; \
-        jmp CommonIrqBody
+.macro TABLE_END section
+.section .rodata.\section\(),"a"
+.align 4
+.long 0
+.previous
+.endm
 	
-#define BUILD_EXTIRQ(irq) \
-    .data 2 ; \
-    .align 4 ; \
-    .long EIH##irq ; \
-    .text ; \
-    .align 4 ; \
-    EIH##irq: ; \
-        pushl $0 ; \
-        pushl $irq ; \
-        jmp CommonExtIrqBody
-	
-#define BUILD_TRAP_ERRCODE(trapnr) \
-    .section .rodata.trapHndl,"a" ; \
-    .align 4 ; \
-    .long TrapHndl##trapnr ; \
-    .text ; \
-    .align 4 ; \
-    TrapHndl##trapnr: ; \
-        pushl $trapnr ; /* error_code has already been filled */ \
-        jmp CommonTrapBody
+.macro BUILD_TRAP_ERRCODE trap
+.section .rodata.trapHndl,"a"
+.align 4
+.long 1f
+.text
+.align 4
+1:
+       	pushl $\trap\() /* error_code has already been filled */
+       	jmp CommonTrapBody
+.endm
 
-#define BUILD_TRAP_NOERRCODE(trapnr) \
-    .section .rodata.trapHndl,"a" ; \
-    .align 4 ; \
-    .long TrapHndl##trapnr ; \
-    .text ; \
-    .align 4 ; \
-    TrapHndl##trapnr: ; \
-        pushl $0 ; /* the error_code (no error code) */ \
-        pushl $trapnr ;  /* the trap */ \
-        jmp CommonTrapBody
+.macro BUILD_TRAP_NOERRCODE trap
+.section .rodata.trapHndl,"a"
+.align 4
+.long 1f
+.text
+.align 4
+1:
+       	pushl $0 /* the error_code (no error code) */
+       	pushl $\trap\()  /* the trap */
+       	jmp CommonTrapBody
+.endm
+
+.macro BUILD_TRAP_BLOCK stTrapNr endTrapNr
+vector=\stTrapNr\()
+.rept \endTrapNr\()-\stTrapNr\()
+	BUILD_TRAP_NOERRCODE vector
+vector=vector+1
+.endr
+.endm
 	
-TAB_ST(hwIrqTable)
-BUILD_IRQ(0x00)
-BUILD_IRQ(0x01)
-BUILD_IRQ(0x02) 
-BUILD_IRQ(0x03)
-BUILD_IRQ(0x04) 
-BUILD_IRQ(0x05)
-BUILD_IRQ(0x06)
-BUILD_IRQ(0x07)
-BUILD_IRQ(0x08)
-BUILD_IRQ(0x09) 
-BUILD_IRQ(0x0a)
-BUILD_IRQ(0x0b)
-BUILD_IRQ(0x0c)
-BUILD_IRQ(0x0d)
-BUILD_IRQ(0x0e)
-BUILD_IRQ(0x0f)
-TAB_END()
-	
-TAB_ST(trapTable)
+TABLE_START trapHndl, trapTable
 BUILD_TRAP_NOERRCODE(0x0)
 BUILD_TRAP_NOERRCODE(0x1)
 BUILD_TRAP_NOERRCODE(0x2)
@@ -222,7 +179,7 @@ BUILD_TRAP_ERRCODE(0xe)
 BUILD_TRAP_NOERRCODE(0xf)
 BUILD_TRAP_NOERRCODE(0x10) 
 BUILD_TRAP_ERRCODE(0x11)
-BUILD_TRAP_NOERRCODE(0x12) 
+BUILD_TRAP_NOERRCODE(0x12)
 BUILD_TRAP_NOERRCODE(0x13)
 BUILD_TRAP_ERRCODE(0x14) 
 BUILD_TRAP_ERRCODE(0x15)
@@ -236,44 +193,8 @@ BUILD_TRAP_ERRCODE(0x1c)
 BUILD_TRAP_ERRCODE(0x1d)
 BUILD_TRAP_ERRCODE(0x1e) 
 BUILD_TRAP_ERRCODE(0x1f)
-TAB_END()
-	
-/* </track id="PARTITION_BOOT_CODE"> */
-
-TAB_ST(extIrqTable)
-BUILD_EXTIRQ(0x00)
-BUILD_EXTIRQ(0x01)
-BUILD_EXTIRQ(0x02) 
-BUILD_EXTIRQ(0x03)
-BUILD_EXTIRQ(0x04) 
-BUILD_EXTIRQ(0x05)
-BUILD_EXTIRQ(0x06)
-BUILD_EXTIRQ(0x07)
-BUILD_EXTIRQ(0x08)
-BUILD_EXTIRQ(0x09) 
-BUILD_EXTIRQ(0x0a)
-BUILD_EXTIRQ(0x0b)
-BUILD_EXTIRQ(0x0c)
-BUILD_EXTIRQ(0x0d)
-BUILD_EXTIRQ(0x0e)
-BUILD_EXTIRQ(0x0f)
-BUILD_EXTIRQ(0x10)
-BUILD_EXTIRQ(0x11)
-BUILD_EXTIRQ(0x12)
-BUILD_EXTIRQ(0x13)
-BUILD_EXTIRQ(0x14)
-BUILD_EXTIRQ(0x15)
-BUILD_EXTIRQ(0x16)
-BUILD_EXTIRQ(0x17)
-BUILD_EXTIRQ(0x18)
-BUILD_EXTIRQ(0x19) 
-BUILD_EXTIRQ(0x1a)
-BUILD_EXTIRQ(0x1b)
-BUILD_EXTIRQ(0x1c)
-BUILD_EXTIRQ(0x1d)
-BUILD_EXTIRQ(0x1e)
-BUILD_EXTIRQ(0x1f)	
-TAB_END()
+BUILD_TRAP_BLOCK 0x20 NO_IDT_ENTRIES
+TABLE_END trapHndl
 	
 .data
 	.word 0

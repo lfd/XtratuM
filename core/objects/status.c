@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -38,7 +38,17 @@ static xm_s32_t CtrlStatus(xmObjDesc_t desc, xm_u32_t cmd, union statusCmd *__gP
         return XM_INVALID_PARAM;
     if (__CheckGParam(0, args, sizeof(union statusCmd))<0) 
 	return XM_INVALID_PARAM;
+
     switch(cmd) {
+    case XM_SET_PARTITION_OPMODE:
+        if (partId==XM_HYPERVISOR_ID)
+            return XM_INVALID_PARAM;
+        if ((partId<0)||(partId>=xmcTab.noPartitions))
+		return XM_INVALID_PARAM;
+        if ((args->opMode<XM_STATUS_IDLE)||(args->opMode>XM_STATUS_HALTED))
+		return XM_INVALID_PARAM;
+        partitionTab[partId]->ctrl.g->opMode=args->opMode;
+        return XM_OK;
     case XM_STATUS_GET:
 	if (partId==XM_HYPERVISOR_ID) {
 	    systemStatus.resetCounter=sysResetCounter[0];
@@ -58,6 +68,7 @@ static xm_s32_t CtrlStatus(xmObjDesc_t desc, xm_u32_t cmd, union statusCmd *__gP
 	    partitionStatus[partId].resetCounter=partitionTab[partId]->ctrl.g->resetCounter;
 	    partitionStatus[partId].resetStatus=partitionTab[partId]->ctrl.g->resetStatus;
 	    partitionStatus[partId].execClock=GetTimeUsecVClock(&partitionTab[partId]->ctrl.g->vClock);
+            partitionStatus[partId].opMode=partitionTab[partId]->ctrl.g->opMode;
 	    memcpy(&args->status.partition, &partitionStatus[partId].state, sizeof(xmPartitionStatus_t));
 
 	}

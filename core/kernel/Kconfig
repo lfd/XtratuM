@@ -5,25 +5,20 @@ config NO_GCC_OPT
 config ID_STRING_LENGTH
        int "Max. identifier length (B)"
        default "16"
+       
+config DEBUG
+	   bool "Debug support"
+	   default y
 
 menu "Hypervisor parameters"
 
 config EARLY_KOUTPUT
        bool "Enable early XM output"
        default y
-       
-#config USAGE_ACCOUNTING
-#       bool "Enable slot usage accounting"
-#       default y
 
 config SPARE_SCHEDULING
        bool "Enable spare time dynamic scheduling"
        default n
-       
-config MAX_SPARE_SLOTS
-       int "Maximum spare slots supported"
-       default 10
-       depends on SPARE_SCHEDULING
 
 menu "Partition parameters"
 
@@ -40,10 +35,6 @@ source "Kconfig.ver"
 if MMU
 source "kernel/mmu/Kconfig"
 endif
-
-#if MMULESS
-#source "kernel/mmuless/Kconfig"
-#endif
 
 source "klibc/Kconfig"
 source "devices/Kconfig"

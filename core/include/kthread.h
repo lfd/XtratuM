@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -45,6 +45,7 @@ struct guest {
     xm_u32_t resetCounter;
     xm_u32_t resetStatus;
     struct trapHandler overrideTrapTab[TRAP_NR];
+    xm_u32_t opMode;
 };
 
 #define CHECK_KTHR_SANITY(k) ASSERT((k->ctrl.magic1==KTHREAD_MAGIC)&&(k->ctrl.magic2==KTHREAD_MAGIC))
@@ -83,11 +84,9 @@ typedef union kThread {
         (k)->ctrl.flags&=~(((f)<<KTHREAD_SCHED_BIT)&KTHREAD_SCHED_MASK)
 #define   IS_KTHREAD_SCHED_FLAG_SET(k, f)                               \
         ((((k)->ctrl.flags&KTHREAD_SCHED_MASK)>>KTHREAD_SCHED_BIT)&(f))
-#ifdef CONFIG_SPARE_SCHEDULING
         // [16..15] spare scheduling bits
 #define KTHREAD_SPARE_GUEST_F (1<<16)
 #define KTHREAD_SPARE_HOST_F (1<<17)
-#endif
         struct dynList localActiveKTimers;
         struct guest *g;
         void *schedData;
@@ -101,6 +100,7 @@ extern void InitIdle(kThread_t *idle, xm_s32_t cpu);
 extern kThread_t *CreatePartition(struct xmcPartition *conf);
 extern xm_s32_t ResetPartition(kThread_t *k, xm_u32_t cold, xm_u32_t status);
 extern void ArchCreatePartition(kThread_t *k);
+extern void KThreadArchInit(kThread_t *k);
 extern void BuildPartitionMemoryImg(kThread_t *k, struct xmPartitionHdr *xmPHdr);
 extern partitionControlTable_t *MapPartitionCtrlTab(xmAddress_t partitionCtrlTab);
 extern void UnmapPartitionCtrlTab(partitionControlTable_t *partitionCtrlTab);

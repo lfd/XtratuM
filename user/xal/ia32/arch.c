@@ -5,45 +5,17 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
-
+#include <irqs.h>
+#include <stdio.h>
 #include <xm.h>
 
-#define HwSetGate(descGateAddr, type, dpl, addr) ({  \
-    long __d0, __d1;		    			\
-    __asm__ __volatile__ ("movw %%dx,%%ax\n\t"			\
-			  "movw %4,%%dx\n\t"			\
-			  "movl %%eax,%0\n\t"			\
-			  "movl %%edx,%1"			\
-			  :"=m" (*((long *) (descGateAddr))),	\
-			   "=m" (*(1+(long *) (descGateAddr))), "=&a" (__d0), "=&d" (__d1) \
-			  :"i" ((xm_s16_t) (0x8000+(dpl<<13)+(type<<8))), \
-			  "3" ((xm_s8_t *) (addr)),"2" (((1<<3)|1) << 16)); \
-})
-
-#define HwSetIrqGate(vector, addr) 	\
-    HwSetGate((xm_u32_t)idtTab+(vector)*sizeof(gateDesc_t), 14, 0, (addr))
-
-#define HwSetTrapGate(vector, addr)	\
-    HwSetGate((xm_u32_t)idtTab+(vector)*sizeof(gateDesc_t), 15, 0, (addr))
-
-#define HwSetSysGate(vector, addr)	\
-    HwSetGate((xm_u32_t)idtTab+(vector)*sizeof(gateDesc_t), 15, 3, (addr))
-
-#define HwSetCallGate(table, sel, offset, dpl, param, segSel) do { \
-    (table)[sel/8].gate = (gateDesc_t) { \
-        offsetLow: ((xm_u32_t)offset & 0xFFFF), \
-        selector: (segSel & 0xFFFF), \
-	wordCount: (param & 0x1F), \
-	access: 0x8C | ((dpl & 0x3) << 5), \
-	offsetHigh: (((xm_u32_t) offset & 0xFFFF0000) >> 16) \
-    }; \
-} while(0)
+#define GUEST_CS_SEL ((1<<3)|1)
 
 typedef struct {
     xm_u32_t offsetLow:16,      /* offset 0..15 */
@@ -53,34 +25,58 @@ typedef struct {
         offsetHigh:16;  /* offset 16..31 */
 } gateDesc_t;
 
-#define IDT_ENTRIES (256+32)
-extern gateDesc_t idtTab[IDT_ENTRIES];
+extern gateDesc_t idtTab[TRAPTAB_LENGTH];
 extern pseudoDesc_t idtDesc;
 
-#define EXT_IRQ_VECTOR 0x90
-extern partitionControlTable_t partitionControlTable;
+trapHandler_t trapHandlersTab[TRAPTAB_LENGTH];
+partitionControlTable_t partitionControlTable __attribute__ ((section (".xm_ctrl"), aligned(0x1000)));
+partitionInformationTable_t partitionInformationTable __attribute__ ((section (".xm_ctrl"), aligned(0x1000)));
+
+static void UnexpectedTrap(trapCtxt_t *ctxt) {
+    printf("[P%d] Unexpected trap 0x%x (pc: 0x%x)\n", XM_PARTITION_SELF, ctxt->irqNr, ctxt->eip);
+}
+
+xm_s32_t InstallTrapHandler(xm_s32_t trapNr, trapHandler_t handler) {
+    if (trapNr<0||trapNr>TRAPTAB_LENGTH)
+        return -1;
+
+    if (handler)
+        trapHandlersTab[trapNr]=handler;
+    else
+        trapHandlersTab[trapNr]=UnexpectedTrap;
+    return 0;
+}
+
+void DoTrap(trapCtxt_t *ctxt) {
+    if (trapHandlersTab[ctxt->irqNr]) {
+        trapHandlersTab[ctxt->irqNr](ctxt);
+    }
+}
+
+static inline void HwSetIrqGate(xm_s32_t e, void *hndl) {
+    idtTab[e].selector=GUEST_CS_SEL;
+    idtTab[e].offsetLow=(xmAddress_t)hndl&0xffff;
+    idtTab[e].offsetHigh=((xmAddress_t)hndl>>16)&0xffff;
+    idtTab[e].access=0x8e|(1<<5);
+}
+
+static inline void HwSetTrapGate(xm_s32_t e, void *hndl) {
+    idtTab[e].selector=GUEST_CS_SEL;
+    idtTab[e].offsetLow=(xmAddress_t)hndl&0xffff;
+    idtTab[e].offsetHigh=((xmAddress_t)hndl>>16)&0xffff;
+    idtTab[e].access=0x8f|(1<<5);
+}
 
 void InitArch(void) {
-    extern void (*hwIrqTable[0])(void);
     extern void (*trapTable[0])(void);
-    extern void (*extIrqTable[0])(void);
-    long irqNr;
-
-    /* Setting up the HW irqs */
-    for (irqNr=0; hwIrqTable[irqNr]; irqNr++)
-	HwSetIrqGate(irqNr+0x20, hwIrqTable[irqNr]);
-	
-	for (irqNr=0; irqNr<XM_VT_EXT_MAX; irqNr++) {
-		partitionControlTable.extIrq2Vector[irqNr]=EXT_IRQ_VECTOR+irqNr;
-		HwSetIrqGate(EXT_IRQ_VECTOR+irqNr, extIrqTable[irqNr]);
-	}
+    xm_s32_t irqNr, e;
     
     HwSetTrapGate(0, trapTable[0]);
     HwSetIrqGate(1, trapTable[1]);
     HwSetIrqGate(2, trapTable[2]);
-    HwSetSysGate(3, trapTable[3]);
-    HwSetSysGate(4, trapTable[4]);
-    HwSetSysGate(5, trapTable[5]);
+    HwSetTrapGate(3, trapTable[3]);
+    HwSetTrapGate(4, trapTable[4]);
+    HwSetTrapGate(5, trapTable[5]);
     HwSetTrapGate(6, trapTable[6]);
     HwSetTrapGate(7, trapTable[7]);
     HwSetTrapGate(8, trapTable[8]);
@@ -97,5 +93,14 @@ void InitArch(void) {
     HwSetTrapGate(18, trapTable[18]);
     HwSetTrapGate(19, trapTable[19]);
 
-	partitionControlTable.arch.idtr=(pseudoDesc_t)idtDesc;
+    for (irqNr=0x20; irqNr<TRAPTAB_LENGTH; irqNr++)
+        HwSetIrqGate(irqNr, trapTable[irqNr]);
+
+    for (e=0; e<XM_VT_EXT_MAX; e++)
+        partitionControlTable.extIrq2Vector[e]=e+EXT_IRQ_VECTOR;
+
+    for (e=0; e<TRAPTAB_LENGTH; e++)
+        trapHandlersTab[e]=UnexpectedTrap;
+
+    partitionControlTable.arch.idtr=(pseudoDesc_t)idtDesc;
 }

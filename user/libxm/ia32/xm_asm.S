@@ -1,5 +1,5 @@
 /*
- * $FILE: virq.S
+ * $FILE: xm_asm.S
  *
  * IRET implementation
  *

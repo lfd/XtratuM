@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -18,12 +18,12 @@
 #include <arch/irqs.h>
 #include <xm.h>
 
-#define XAL_XMEXT_TRAP(_xmtrap)  ((( _xmtrap ) - XM_VT_EXT_FIRST)+224)
+#define XAL_XMEXT_TRAP(_xmtrap)  ((( _xmtrap ) - XM_VT_EXT_FIRST)+EXT_IRQ_VECTOR)
 
 typedef void (*trapHandler_t)(trapCtxt_t *);
 
 extern trapHandler_t trapHandlersTab[];
 extern xm_s32_t InstallTrapHandler(xm_s32_t trapNr, trapHandler_t handler);
-extern void SetupIrqs(void);
+//extern void SetupIrqs(void);
 
 #endif

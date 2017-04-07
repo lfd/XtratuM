@@ -5,17 +5,44 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
 #include <stdc.h>
 #include <arch/xm_def.h>
 
+#include <arch/paging.h>
+#include <processor.h>
+
 #ifdef __ARCH_MEMCPY
+
+void *MemcpyPhys(void *dst, const void *src, xm_u32_t count) {
+    extern xm_u32_t xmPhys[], _sphys[];
+    extern void _MemcpyPhys(void *dst, const void *src, xm_u32_t count);
+    xmAddress_t *pgTab, *s, *d;
+    xm_u32_t backup;
+
+    SaveCr3(pgTab);
+    backup=pgTab[XMVIRT2PHYS(xmPhys)>>PGDIR_SHIFT];
+    pgTab[XMVIRT2PHYS(xmPhys)>>PGDIR_SHIFT]=_PG_PRESENT|_PG_RW|XMVIRT2PHYS(xmPhys);
+    xmPhys[VA2Pgt((xm_u32_t)_sphys)]=_PG_PRESENT|_PG_RW|_PG_GLOBAL|(xm_u32_t)_sphys;
+
+    s = (xmAddress_t *)PageTranslate((xmAddress_t)src);
+    if (!s)
+        s = (void *)src;
+    d = (xmAddress_t *)PageTranslate((xmAddress_t)dst);
+    if (!d)
+        d = dst;
+    _MemcpyPhys(d, s, count);
+
+    pgTab[XMVIRT2PHYS(xmPhys)>>PGDIR_SHIFT]=backup;
+
+    return dst;
+}
 
 static inline void *_MemCpy1(xm_s8_t *dest, const xm_s8_t *src, xm_u32_t n) {
     xm_s8_t *dp = dest;

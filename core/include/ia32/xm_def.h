@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -22,7 +22,7 @@
 #ifdef _XM_KERNEL_
 
 #define __ARCH_MEMCPY
-#define XM_START_VMMAP (XM_OFFSET+8*1024*1024)
+#define XM_START_VMMAP (XM_OFFSET+CONFIG_XM_LOAD_ADDR+xmcPhysMemAreaTab[xmcTab.hpv.physicalMemoryAreasOffset].size)
 #define XM_END_VMMAP XM_PGT_DIR_VADDR
 
 #endif

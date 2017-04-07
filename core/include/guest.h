@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -97,6 +97,9 @@
 /* <track id="doc-Partition-Control-Table"> */
 typedef struct {
     xm_u32_t magic;  
+    xm_u32_t resetCounter;
+    xm_u32_t resetStatus;
+
     xmAtomic_t iFlags;
     // BIT: 23..16: ARCH
     //      1: TRAP PENDING
@@ -117,6 +120,7 @@ typedef struct {
 	xm_u32_t slotUsed;
 	xm_u32_t slotAccum;
     } schedInfo;
+
     xm_u8_t trap2Vector[TRAP_NR];
     xm_u8_t hwIrq2Vector[HWIRQ_NR];
     xm_u16_t extIrq2Vector[XM_VT_EXT_MAX];

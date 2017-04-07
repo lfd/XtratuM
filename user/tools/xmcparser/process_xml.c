@@ -4,10 +4,10 @@
  *
  * $VERSION$
  *
- * Authors: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -186,6 +186,8 @@ static void StartMemAreaHpvAttrHandler(xmlNodePtr node, const xmlChar *val) {
 
 static void SizeMemAreaHpvAttrHandler(xmlNodePtr node, const xmlChar *val) {
     physMemAreaTab[CURRENT_PHYSMEMAREA].size=SizeStr2Size((char *)val);
+    if ((physMemAreaTab[CURRENT_PHYSMEMAREA].size+1024*1024) & 0x3FFFFF)
+        ShowErrorMsgAndExit("XtratuM allocated memory must be equal to [3MB | 7MB | 11MB | ...]");
     AddMemoryArea(physMemAreaTab[CURRENT_PHYSMEMAREA].startAddr, physMemAreaTab[CURRENT_PHYSMEMAREA].startAddr+physMemAreaTab[CURRENT_PHYSMEMAREA].size-1, GetLine(&physMemAreaTab[CURRENT_PHYSMEMAREA].startAddr), node->line);
     AddLine(&physMemAreaTab[CURRENT_PHYSMEMAREA].size, node->line);
 }

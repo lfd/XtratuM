@@ -4,4 +4,13 @@ config OBJ_STATUS_ACC
        bool "Enable XM/partition status accounting"
        default "n"
 
+config OBJ_HM_VERBOSE
+       bool "Verbose HM events"
+       default y
+       depends on DEBUG
+       
+config CONSOLE_SCAPE_SYMB
+       bool "Enable partition id symbol on console write"
+       default n
+       
 endmenu

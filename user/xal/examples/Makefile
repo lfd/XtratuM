@@ -1,6 +1,6 @@
 all: examples
 
-DIRS=$(wildcard l?x?-*)
+DIRS=$(wildcard example.*)
 
 examples:
 	@for dir in $(DIRS) ; do \

@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -20,6 +20,7 @@
 #include <arch/hypervisor.h>
 
 #include <xm_inc/linkage.h>
+#include <xm_inc/objects/mem.h>
 
 #define XM_PARTITION_SELF (XM_params_get_PIT()->id)
 

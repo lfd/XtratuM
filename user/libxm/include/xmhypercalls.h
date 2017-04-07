@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -40,6 +40,7 @@ extern __stdcall xm_s32_t XM_shutdown_partition(xm_u32_t partition_id);
 extern __stdcall xm_s32_t XM_reset_partition(xm_u32_t partition_id, xm_u32_t resetMode, xm_u32_t status);
 extern __stdcall xm_s32_t XM_halt_partition(xm_u32_t partition_id);
 extern __stdcall xm_s32_t XM_idle_self(void);
+extern __stdcall xm_s32_t XM_set_spare_guest(xm_u32_t partition_id, xmTime_t *start, xmTime_t *stop);
 
 // system status hypercalls
 extern __stdcall xm_s32_t XM_halt_system(void);
@@ -72,6 +73,7 @@ extern __stdcall xm_s32_t XM_override_trap_hndl(xm_s32_t entry, struct trapHandl
 extern __stdcall xm_s32_t XM_mask_hwirq(xm_u32_t noIrq);
 extern __stdcall xm_s32_t XM_unmask_hwirq(xm_u32_t noIrq);
 extern __stdcall xm_s32_t XM_raise_ipvi(xm_u32_t partition_id, xm_u8_t no_ipvi);
+
 
 // Deferred hypercalls
 extern __stdcall xm_s32_t XM_multicall(void *startAddr, void *endAddr);

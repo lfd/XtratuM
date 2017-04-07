@@ -69,7 +69,7 @@ ENTRY(_start)
 
 	/* Only XM is mapped */
 	movl $__VIRT2PHYS(xmPgt), %edi
-	movl $__VIRT2PHYS(XM_START_VMMAP-PAGE_SIZE), %ecx // 4Mb
+	movl $__VIRT2PHYS((XM_OFFSET+8*1024*1024)-PAGE_SIZE), %ecx // 4Mb
 	
 	andl $PGT_MASK, %ecx
 	sarl $(PAGE_SHIFT-2), %ecx

@@ -3,10 +3,10 @@
  *
  * System/partition status
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -47,6 +47,13 @@ typedef struct {
 #define XM_STATUS_READY 0x1
 #define XM_STATUS_SUSPENDED 0x2
 #define XM_STATUS_HALTED 0x3
+
+    xm_u32_t opMode;
+#define XM_OPMODE_IDLE 0x0
+#define XM_OPMODE_COLD_RESET 0x1
+#define XM_OPMODE_WARM_RESET 0x2
+#define XM_OPMODE_NORMAL 0x3
+
     /* Number of virtual interrupts received. */
     xm_u64_t noVIrqs;                   /* [[OPTIONAL]] */
     /* Reset information */
@@ -63,7 +70,8 @@ typedef struct {
 
 #define  XM_STATUS_GET 0x0
 #define  XM_GET_SCHED_PLAN_STATUS 0x1
-#define  XM_SWITCH_SCHED_PLAN 0x2
+#define  XM_SET_PARTITION_OPMODE 0x2
+#define  XM_SWITCH_SCHED_PLAN 0x3
 
 union statusCmd {
     union {
@@ -75,6 +83,7 @@ union statusCmd {
         xm_u32_t new;
         xm_u32_t current;
     } schedPlan;
+    xm_u32_t opMode;
 };
 
 #ifdef _XM_KERNEL_

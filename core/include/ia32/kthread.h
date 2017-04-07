@@ -3,10 +3,10 @@
  *
  * Kernel, Guest or Layer0 thread
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -33,8 +33,8 @@
 
 #define KTHREAD_ARCH_INIT(cKThread, stack) do {	\
     __asm__ __volatile__ ("finit\n\t" ::); \
-    xmTss[GET_CPU_ID()].t.ss0=XM_DS; \
-    xmTss[GET_CPU_ID()].t.esp0=stack; \
+    cKThread->ctrl.g->kArch.tss.t.ss0=DS_SEL; \
+    cKThread->ctrl.g->kArch.tss.t.sp0=(xmAddress_t)&k->kStack[CONFIG_KSTACK_SIZE]; \
     SetWp(); \
 } while (0)
 
@@ -47,12 +47,16 @@ struct kThreadArch {
     gdtDesc_t gdtTab[CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES];
     pseudoDesc_t idtr;
     genericDesc_t idtTab[IDT_ENTRIES];
+    ioTss_t tss;
+#if 0
     struct {
 	xm_s32_t esp1;
 	xm_s32_t ss1;
 	xm_s32_t esp2;
 	xm_s32_t ss2;
     } tss;
+#endif
+
 };
 
 #endif

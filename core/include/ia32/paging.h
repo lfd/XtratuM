@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -85,5 +85,6 @@
 extern xm_u32_t xmPgd[];
 /* XM's PGT */
 extern xm_u32_t xmPgt[];
+
 #endif // !__ASSEMBLY__
 #endif

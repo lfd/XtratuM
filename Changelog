@@ -1,0 +1,53 @@
+From XM 2.1 serie to 2.3
+------------------------
+
+* XtratuM configuration now uses the Kconfig method (Linux 2.6 series)
+	* Affects: core, rsw (bootloaders), xi
+
+* GCov support added: it is possible to perform a coverage analisys
+	* Affects: core, xmgcov (tools)
+
+* xmcparser: number of line added, now when an error is detected, the
+	parser outputs the offending line number.
+	* Affects: xmcparser
+
+* XML new attribute "features" added to processor
+	* Affects: xmcparser (tools)
+
+* XM_VT_EXT_QUEUING_PORT/XM_VT_EXT_SAMPLING_PORT extended interrupts
+	removed
+	* Affects: core, libxm
+
+* Added XM_VT_EXT_OBJDESC, an object attached to an object descritor can
+	raise an extended interrupt which is associated with the object
+	descriptor
+	* Affects: core, libxm
+
+* Added a field objDescPend and objDescMask to the structure
+	partitionControlTable_t	to be able to individually manage the
+	XM_VT_EXT_OBJDESC extended interrupt.
+	* Affects: core, libxm
+
+* Added functions ObjDescSignalMask/ObjDescSignalUnmask ... to libxm to
+	manage objDescPend and objDescMask
+	* Affects: libxm
+
+* XML modified to include the load address of partitions
+	* Affects: core, xmcparser
+
+* XEF (XtratuM Executable Format) added, now it is possible to relocate 
+	partitions
+	* Affects: core, bootloader (RSW)
+
+* Large page support added
+	* Affects: core
+
+* Most of the parameters such as max number of partitions, are not longer
+	specified during the compilation of XtratuM.
+	* Affects: core, xmcparser, bootloader (RSW)
+
+* Object concept altered, now an object cannot be opened or closed
+	* Affects: core, libxm
+
+* XM_hm_open: removed
+	* Affects: libxm

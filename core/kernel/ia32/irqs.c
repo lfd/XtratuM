@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -26,54 +26,17 @@
 static xm_s32_t Ia32TrapPageFault(irqCtxt_t *ctxt) {
     localSched_t *sched=GET_LOCAL_SCHED();
     xm_u32_t cr2;
+
     SaveCr2(cr2);
-#if 0
-    {
-	unsigned long pgd, *vPgd, pgt, *vPgt, p;
-	struct physPage *page;
-	SavePgd(pgd);
-	kprintf("pgd: %x\n", pgd);
-	if (!(page=PmmFindPage(pgd)))
-	    while (1) kprintf("Error PGD\n");
-	vPgd=(xm_u32_t *)VCacheMapPage(pgd, page);
-	kprintf("vpgd: %x\n", vPgd);
-	pgt=vPgd[VA2Pgd(cr2)]&PAGE_MASK;
-	kprintf("pgd: %x\n", pgd);
-	if (!(page=PmmFindPage(pgt)))
-	    while (1) kprintf("Error PGT\n");
-	vPgt=(xm_u32_t *)VCacheMapPage(pgt, page);
-	p=vPgt[VA2Pgt(cr2)]&PAGE_MASK;
-	kprintf("PAGE: %x\n", p);
-	if (!(page=PmmFindPage(p)))
-	    while (1) kprintf("Error PGT\n");
-	kprintf("TYPE: %d\n", page->type);
-	}
-#endif
-
-    sched->cKThread->ctrl.g->partitionControlTable->arch.cr2=cr2;
-    if (!IsSvIrqCtxt(ctxt)) {
-        if ((cr2<CONFIG_XM_OFFSET)||(cr2==(~0))) {
-            SetTrapPending(ctxt);
-            return 1;
-        }
+    if (sched->cKThread->ctrl.g) {
+        sched->cKThread->ctrl.g->partitionControlTable->arch.cr2=cr2;
     }
-    return 0;
-}
-
-static xm_s32_t Ia32GenProFault(irqCtxt_t *ctxt) {
-    if (!IsSvIrqCtxt(ctxt)) {
-        SetTrapPending(ctxt);
-        return 1;
+    if (cr2>=CONFIG_XM_OFFSET) {
+        return 0;
     }
-    return 0;
-}
+    SetTrapPending(ctxt);
 
-static xm_s32_t Ia32DeviceNotAvailableFault(irqCtxt_t *ctxt) {
-    if (!IsSvIrqCtxt(ctxt)) {
-        SetTrapPending(ctxt);
-        return 1;
-    }
-    return 0;
+    return 1;
 }
 
 void ArchSetupIrqs(void) {
@@ -83,17 +46,11 @@ void ArchSetupIrqs(void) {
     extern void HypercallHandler(void);
     xm_s32_t irqNr;
 
-    /* Setting up the HW irqs */
-    for (irqNr=0; irqNr<HWIRQ_NR; irqNr++) {
-	ASSERT(hwIrqHndlTab[irqNr]);
-	HwSetIrqGate(irqNr+FIRST_EXTERNAL_VECTOR, hwIrqHndlTab[irqNr]);
+    for (irqNr = 0; irqNr < HWIRQ_NR; irqNr++) {
+        ASSERT(hwIrqHndlTab[irqNr]);
+        HwSetIrqGate(irqNr + FIRST_EXTERNAL_VECTOR, hwIrqHndlTab[irqNr]);
     }
     
-    /*
-      XXX:  the  single  difference  between   a   trap_gate and    an
-      interrupt_gate is  that the IF flags is  unmodified in  the first
-      one whereas it is cleaned in the second one
-    */
     HwSetTrapGate(0, trapHndlTab[0]);
     HwSetIrqGate(1, trapHndlTab[1]);
     HwSetIrqGate(2, trapHndlTab[2]);
@@ -107,7 +64,6 @@ void ArchSetupIrqs(void) {
     HwSetTrapGate(10, trapHndlTab[10]);
     HwSetTrapGate(11, trapHndlTab[11]);
     HwSetTrapGate(12, trapHndlTab[12]);
-    //HwSetTrapGate(13, trapHndlTab[13]);
     HwSetIrqGate(13, trapHndlTab[13]);
     HwSetIrqGate(14, trapHndlTab[14]);
     HwSetTrapGate(15, trapHndlTab[15]);
@@ -118,9 +74,7 @@ void ArchSetupIrqs(void) {
     //HwSetCallGate(earlyXmGdt, XM_HYPERCALL_CALLGATE_SEL,
     //HypercallHandler, 2, 1, XM_CS);
 
-    SetTrapHandler(13, Ia32GenProFault);
     SetTrapHandler(14, Ia32TrapPageFault);
-    SetTrapHandler(7, Ia32DeviceNotAvailableFault);
 
     InitPic(0x20, 0x28);
 }
@@ -217,12 +171,12 @@ static inline void __FixStackPc(irqCtxt_t *ctxt, int irqNr, int errCode) {
 	xm_u32_t ss=0;
 	switch(xcs&0x3) {
 	case 0x1:
-	    ss=sched->cKThread->ctrl.g->kArch.tss.ss1;
-	    esp=(xm_u32_t *)sched->cKThread->ctrl.g->kArch.tss.esp1;
+	    ss=sched->cKThread->ctrl.g->kArch.tss.t.ss1;
+	    esp=(xm_u32_t *)sched->cKThread->ctrl.g->kArch.tss.t.esp1;
 	    break;
 	case 0x2:
-	    ss=sched->cKThread->ctrl.g->kArch.tss.ss2;
-	    esp=(xm_u32_t *)sched->cKThread->ctrl.g->kArch.tss.esp2;
+	    ss=sched->cKThread->ctrl.g->kArch.tss.t.ss2;
+	    esp=(xm_u32_t *)sched->cKThread->ctrl.g->kArch.tss.t.esp2;
 	    break;
 	default:
 	    PartitionPanic(0, 0, "[__FixStackPc] CS (0x%x) corrupted", xcs);
@@ -254,40 +208,41 @@ static inline void __FixStackPc(irqCtxt_t *ctxt, int irqNr, int errCode) {
     ctxt->eip=eip;
 }
 
-void __EmulIrq(irqCtxt_t *ctxt) {
-    localSched_t *sched=GET_LOCAL_SCHED();
+void __EmulIrq(irqCtxt_t *ctxt)
+{
+    localSched_t *sched = GET_LOCAL_SCHED();
     xm_s32_t eIrq;
 
     if (!sched->cKThread->ctrl.g ||!(ctxt->xcs&0x3))
-	return;
-    
+        return;
+
     // Do pending traps
     if (XMAtomicGet(&sched->cKThread->ctrl.g->partitionControlTable->iFlags)&IFLAGS_TRAP_PEND_MASK) {
-	XMAtomicClearMask(IFLAGS_TRAP_PEND_MASK, &sched->cKThread->ctrl.g->partitionControlTable->iFlags);
-	__FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->trap2Vector[ctxt->irqNr], ctxt->errorCode);
-	return;
+        XMAtomicClearMask(IFLAGS_TRAP_PEND_MASK, &sched->cKThread->ctrl.g->partitionControlTable->iFlags);
+        __FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->trap2Vector[ctxt->irqNr], ctxt->errorCode);
+            return;
     }
 
     // pending hwirqs
     if (XMAtomicGet(&sched->cKThread->ctrl.g->partitionControlTable->iFlags)&IFLAGS_ATOMIC_MASK) {
-	if ((ctxt->eip>=sched->cKThread->ctrl.g->partitionControlTable->arch.atomicArea.sAddr)&&(ctxt->eip<sched->cKThread->ctrl.g->partitionControlTable->arch.atomicArea.eAddr))
-	    return;
+        if ((ctxt->eip>=sched->cKThread->ctrl.g->partitionControlTable->arch.atomicArea.sAddr)&&(ctxt->eip<sched->cKThread->ctrl.g->partitionControlTable->arch.atomicArea.eAddr))
+            return;
     }
 
     if ((eIrq=AreIrqsPending(sched->cKThread))>-1) {
-	ASSERT(eIrq<HWIRQ_NR);
-	XMAtomicClearMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->hwIrqsPend);
-	XMAtomicSetMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->hwIrqsMask);
-	__FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->hwIrq2Vector[eIrq], 0);
-	return;
+        ASSERT(eIrq<HWIRQ_NR);
+        XMAtomicClearMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->hwIrqsPend);
+        XMAtomicSetMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->hwIrqsMask);
+        __FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->hwIrq2Vector[eIrq], 0);
+        return;
     }
 
-    // pending extirqs
+    // pending extirq
     if ((XMAtomicGet(&sched->cKThread->ctrl.g->partitionControlTable->iFlags)&IFLAGS_IRQ_MASK)&&((eIrq=AreExtIrqsPending(sched->cKThread))>-1)) {
-	XMAtomicClearMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->extIrqsPend);
-	XMAtomicSetMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->extIrqsMask);
-	__FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->extIrq2Vector[eIrq], 0);
-	return;
+        XMAtomicClearMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->extIrqsPend);
+        XMAtomicSetMask((1<<eIrq), &sched->cKThread->ctrl.g->partitionControlTable->extIrqsMask);
+        __FixStackPc(ctxt, sched->cKThread->ctrl.g->partitionControlTable->extIrq2Vector[eIrq], 0);
+        return;
     }
 
     // No emulation required

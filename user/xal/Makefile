@@ -8,8 +8,8 @@ XAL_PATH	= $(XTRATUM_PATH)/user/xal
 COMMON_PATH	= $(XAL_PATH)/common
 ARCH_PATH	= $(XAL_PATH)/$(ARCH)
 
-CFLAGS += -I$(XAL_PATH)/include -I$(ARCH_PATH) --include config.h
-ASFLAGS += -I$(XAL_PATH)/include -I$(ARCH_PATH) --include config.h
+TARGET_CFLAGS += -I$(XAL_PATH)/include -I$(ARCH_PATH) --include config.h
+TARGET_ASFLAGS += -I$(XAL_PATH)/include -I$(ARCH_PATH) --include config.h
 
 TARG=lib/libxal.a
 OBJS=\
@@ -19,7 +19,7 @@ OBJS=\
 
 libs: links $(TARG)
 $(TARG): $(OBJS)
-	@$(AR) cr $@ $^
+	@$(TARGET_AR) cr $@ $^
 	@cp $(ARCH)/loader.lds lib
 
 KCONFIG_AUTOHEADER=$(XAL_PATH)/include/autoconf.h

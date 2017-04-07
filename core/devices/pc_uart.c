@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -17,8 +17,8 @@
 #include <arch/io.h>
 #include <arch/uart.h>
 
-RESERVE_HWIRQ(UART_IRQ0);
-RESERVE_IOPORTS(DEFAULT_PORT, 5);
+//RESERVE_HWIRQ(UART_IRQ0);
+//RESERVE_IOPORTS(DEFAULT_PORT, 5);
 
 static xm_s32_t InitUart(void) {
     OutB(0x00, DEFAULT_PORT+1);    // Disable all interrupts

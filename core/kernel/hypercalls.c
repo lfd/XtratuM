@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -51,6 +51,11 @@ __hypercall xm_s32_t MulticallSys(hypercallCtxt_t *ctxt, void *__gParam startAdd
 	}
 	*(xm_u32_t *)(addr+sizeof(xm_u32_t))|=hypercallsTab[noHyp](ctxt, BATCH_GET_PARAM(addr, 0), BATCH_GET_PARAM(addr, 1), BATCH_GET_PARAM(addr, 2), BATCH_GET_PARAM(addr, 3), BATCH_GET_PARAM(addr, 4))<<16;
 	addr+=(hypercallFlagsTab[noHyp].noArgs+2)*sizeof(xm_u32_t);
+//#ifdef EXPERIMENTAL
+//	HwSti();
+//	DoNop();
+//	HwCli();
+//#endif
     }
 
 #undef BATCH_GET_PARAM
@@ -70,12 +75,12 @@ __hypercall xm_s32_t HaltPartitionSys(hypercallCtxt_t *ctxt, xm_s32_t partitionI
     
 	kprintf("[HYPERCALL] (0x%x) Partition %d halted\n", sched->cKThread->ctrl.g->cfg->id, partitionId);
     
-	SET_KTHREAD_FLAG(partitionTab[partitionId], KTHREAD_HALTED_F);
+	HALT_PARTITION(partitionId);
 	return XM_OK;
     }
 
     kprintf("[HYPERCALL] (0x%x) Halted\n", sched->cKThread->ctrl.g->cfg->id);
-    SET_KTHREAD_FLAG(sched->cKThread, KTHREAD_HALTED_F);
+    HALT_PARTITION(partitionId);
     Scheduling();
     SystemPanic(0, ctxt, "[HYPERCALL] A halted partition is being executed");
 
@@ -176,12 +181,9 @@ __hypercall xm_s32_t ShutdownPartitionSys(hypercallCtxt_t *ctxt, xm_u32_t partit
 	    return XM_PERM_ERROR;
 	if ((partitionId>=xmcTab.noPartitions)||!partitionTab[partitionId])
 	    return XM_INVALID_PARAM;
-
-	SetExtIrqPending(partitionTab[partitionId], XM_VT_EXT_SHUTDOWN);      
-	return XM_OK;
     }
 
-    SetExtIrqPending(partitionTab[partitionId], XM_VT_EXT_SHUTDOWN);
+    SHUTDOWN_PARTITION(partitionId);
     return XM_OK;
 }
 
@@ -189,6 +191,11 @@ __hypercall xm_s32_t IdleSelfSys(hypercallCtxt_t *ctxt) {
     localSched_t *sched=GET_LOCAL_SCHED();
     CHECK_SHMAGIC(sched->cKThread);
     ASSERT(!HwIsSti());
+#ifdef CONFIG_SPARE_SCHEDULING
+    if (IS_KTHREAD_FLAG_SET(sched->cKThread, KTHREAD_SPARE_GUEST_F)) {
+        SetSpareGuest(NULL);
+    }
+#endif
     SET_KTHREAD_FLAG(sched->cKThread, KTHREAD_YIELD_F);
     Scheduling();
     return XM_OK;
@@ -383,3 +390,30 @@ __hypercall xm_s32_t RaiseIPVISys(hypercallCtxt_t *ctxt, xm_u32_t partitionId, x
 
     return XM_OK;
 }
+
+#ifdef CONFIG_SPARE_SCHEDULING
+__hypercall xm_s32_t SetSpareGuestSys(hypercallCtxt_t *ctxt, xmId_t partitionId, xmTime_t *__gParam start, xmTime_t *__gParam stop) {
+    localSched_t *sched=GET_LOCAL_SCHED();
+
+    CHECK_SHMAGIC(sched->cKThread);
+    ASSERT(!HwIsSti());
+    if (!IS_KTHREAD_FLAG_SET(sched->cKThread, KTHREAD_SPARE_HOST_F)) {
+        return XM_PERM_ERROR;
+    }
+    if (partitionId==sched->cKThread->ctrl.g->cfg->id)
+        return XM_INVALID_PARAM;
+    if ((partitionId>=xmcTab.noPartitions)||!partitionTab[partitionId])
+        return XM_INVALID_PARAM;
+    if (IS_KTHREAD_FLAG_SET(partitionTab[partitionId], KTHREAD_HALTED_F))
+        return XM_INVALID_PARAM;
+
+    SetSpareGuest(partitionTab[partitionId]);
+    if (__CheckGParam(ctxt, start, sizeof(xmTime_t))>=0)
+        *start = GetSysClockUsec();
+    Scheduling();
+    if (__CheckGParam(ctxt, stop, sizeof(xmTime_t))>=0)
+        *stop = GetSysClockUsec();
+
+    return XM_OK;
+}
+#endif

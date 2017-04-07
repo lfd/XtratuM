@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -52,13 +52,16 @@ typedef __builtin_va_list va_list;
 #define OFFSETOF(_type, _member) ((xmSize_t) &((_type *)0)->_member)
 #endif
 
-extern xm_s32_t vsnprintf(char *s, int nc, const char *fmt, va_list ap);
-extern xm_s32_t vsprintf(char *s, const char *fmt, va_list ap);
-extern xm_s32_t vprintf(const char *fmt, va_list ap);
-extern xm_s32_t snprintf(char *s, xm_s32_t nc, const char *fmt, ...);
-extern xm_s32_t sprintf(char *str, const char *fmt, ...);
-extern xm_s32_t kprintf(const char *fmt, ...);
-
+extern xm_s32_t kprintf(const char *, ...);
+extern xm_s32_t vprintf(const char *fmt, va_list args);
+extern xm_s32_t sprintf(char *s, char const *fmt, ...);
+extern xm_s32_t snprintf(char *s, xm_s32_t n, const char *fmt, ...);
+extern void *memmove(void *, const void *, xmSize_t);
+extern xm_u32_t strtoul(const char *, char **, xm_s32_t);
+extern xm_s32_t strtol(const char *, char **, xm_s32_t);
+extern xm_s64_t strtoll(const char *nPtr, char **endPtr, xm_s32_t base);
+extern xm_u64_t strtoull(const char *ptr, char **endPtr, xm_s32_t base);
+extern char *basename(char *path);
 extern xm_s32_t memcmp(const void *, const void *, xmSize_t);
 extern void *memcpy(void *, const void *, xmSize_t);
 extern void *memset(void *, xm_s32_t, xmSize_t);
@@ -70,5 +73,7 @@ extern xm_s32_t strncmp(const char *, const char *, xmSize_t);
 extern char *strcpy(char *, const char *);
 extern char *strncpy(char *dest, const char *src, xmSize_t n);
 extern xmSize_t strlen(const char *);
+extern char *strrchr(const char *, xm_s32_t);
+extern char *strstr(const char *, const char *);
 
 #endif

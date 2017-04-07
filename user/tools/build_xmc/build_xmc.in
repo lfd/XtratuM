@@ -48,7 +48,7 @@ SECTIONS
 }
 EOF
 
-$CC -x c $CFLAGS $XMC -o $OFILE -Wl,-Ttmp.lds
+$TARGET_CC -x c $TARGET_CFLAGS $XMC -o $OFILE -Wl,-Ttmp.lds
 rm -f tmp.lds
 
 chmod -x $OFILE

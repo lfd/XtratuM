@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<SystemDescription xmlns="http://www.xtratum.org/xm-2.3" version="1.0.0" name="timers">
+    <XMHypervisor console="PcUart" loadPhysAddr="0x100000">
+        <PhysicalMemoryAreas>
+            <Area start="0x100000" size="3MB" />
+        </PhysicalMemoryAreas>
+        <HwDescription>
+            <Processor id="0">
+                <Sched>
+                    <CyclicPlanTable>
+                    <Plan id="0" majorFrame="1000ms">
+                        <Slot id="0" start="0ms" duration="500ms" partitionId="0" />
+                        <Slot id="1" start="500ms" duration="500ms" partitionId="1" />
+                    </Plan>
+                </CyclicPlanTable>
+                </Sched>
+            </Processor>
+            <MemoryLayout>
+                <Region type="ram" start="0x0" size="128MB" />
+            </MemoryLayout>
+        </HwDescription>
+    </XMHypervisor>
+
+    <PartitionTable>
+        <Partition id="0" name="Partition1" processor="0" flags="boot sv" loadPhysAddr="0x2000000" headerOffset="0x0" imageId="0x0"
+            console="PcUart">
+            <PhysicalMemoryAreas>
+                <Area start="0x2000000" size="1MB" flags="mapped write" />
+            </PhysicalMemoryAreas>
+        </Partition>
+        <Partition id="1" name="Partition2" processor="0" flags="boot sv" loadPhysAddr="0x2100000" headerOffset="0x0" imageId="0x1"
+            console="PcUart">
+            <PhysicalMemoryAreas>
+                <Area start="0x2100000" size="1MB" flags="mapped write" />
+            </PhysicalMemoryAreas>
+        </Partition>
+    </PartitionTable>
+
+    <Devices>
+        <PcUart name="PcUart" />
+    </Devices>
+</SystemDescription>

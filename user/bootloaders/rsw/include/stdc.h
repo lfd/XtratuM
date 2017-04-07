@@ -1,16 +1,3 @@
-/*
- * $FILE: stdio.c
- *
- * Standard buffered input/output
- *
- * $VERSION$
- *
- * Author: Salva Peiró <speiro@ai2.upv.es>
- *
- * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
- *     Read LICENSE.txt file for the license.terms.
- */
 
 #ifndef _STDC_H_
 #define _STDC_H_

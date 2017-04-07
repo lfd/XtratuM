@@ -3,10 +3,10 @@
  *
  * Processor-related hypercalls definition
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -39,9 +39,10 @@
 #define __RAISE_IPVI_NR 22
 #define ia32_update_sys_struct_nr 23
 #define ia32_set_idt_desc_nr 24
+#define __SET_SPARE_GUEST_NR 25
 //@ \void{</track id="hypercall-numbers">}
 
-#define NR_HYPERCALLS 25
+#define NR_HYPERCALLS 26
 
 //@ \void{<track id="asm-hypercall-numbers">}
 

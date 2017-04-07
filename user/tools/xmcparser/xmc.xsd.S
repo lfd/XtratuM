@@ -86,7 +86,6 @@
       <xs:enumeration value="boot"/>
 #ifdef CONFIG_SPARE_SCHEDULING
       <xs:enumeration value="sphost"/>
-      <xs:enumeration value="spguest"/>
 #endif
     </xs:restriction>
   </xs:simpleType>

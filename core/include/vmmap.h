@@ -3,10 +3,10 @@
  *
  * Virtual memory map manager
  *
- * Version: XtratuM-2.1.0
+ * $VERSION$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 

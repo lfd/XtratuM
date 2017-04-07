@@ -12,13 +12,13 @@ include $(XTRATUM_PATH)/user/install.mk
 SRCS=xmpack.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))
 
-HOSTCFLAGS += --include xm_inc/config.h
+HOST_CFLAGS += --include xm_inc/config.h
 
 %.o: %.c
-	$(HOSTCC) $(HOSTCFLAGS) -o $@ -c $<
+	$(HOST_CC) $(HOST_CFLAGS) -o $@ -c $<
 
 xmpack: $(OBJS)
-	$(HOSTCC) $(HOSTCFLAGS) -o $@ $(OBJS)
+	$(HOST_CC) $(HOST_CFLAGS) -o $@ $(OBJS)
 
 %.1: %.pod
 	pod2man -c "XtratuM Utilities" -r -s 1 -n $(<:%.pod=%)  $< -o $@

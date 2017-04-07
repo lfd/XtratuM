@@ -10,4 +10,4 @@ include $(XTRATUM_PATH)/core/rules.mk
 -include dep.mk
 
 objs: $(OBJS)
-	@$(LD) $(LDFLAGS) -r -o devices.o $(LOBJS)
+	@$(TARGET_LD) $(TARGET_LDFLAGS) -r -o devices.o $(LOBJS)

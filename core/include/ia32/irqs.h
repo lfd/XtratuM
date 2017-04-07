@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -94,6 +94,9 @@ typedef struct {
     xm_s32_t xss;
 } irqCtxt_t;
 
+typedef irqCtxt_t hypercallCtxt_t;
+
+#if 0
 typedef struct {
     // saved registers
     xm_s32_t ebx;
@@ -114,6 +117,7 @@ typedef struct {
     xm_s32_t esp;
     xm_s32_t xss;
 } hypercallCtxt_t;
+#endif
 
 #define GET_ECODE(ctxt) ctxt->errorCode
 #define GET_ICTXT_PC(ctxt) ctxt->eip

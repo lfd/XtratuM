@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -34,17 +34,17 @@ static xm_s32_t init=0;
 
 static xm_s32_t InitTextVga(void) {
     xm_s32_t pos;
-  
+
     if (!init) {
 	buffer=(xm_u8_t *)TEXT_VGA_ADDRESS;
 	xPos=yPos=0;
 	for (pos=0; pos<VGA_COLUMNS*VGA_LINES; pos++)
 	    ((xm_u16_t *)buffer)[pos]=(VGA_ATTR << 8);
-	
+
 	VgaSetStartAddr(0);
 	VgaSetCursorPos(0);
-	init=1;	
-    } 
+	init=1;
+    }
     return 0;
 }
 
@@ -62,30 +62,34 @@ static inline void PutCharTextVga(xm_s32_t c) {
 	return;
     }
 
-    if (c=='\n'||c=='\r') {
+    if (c == '\r') {
+        xPos = 0;
+        VgaSetCursorPos((xPos+yPos*VGA_COLUMNS));
+    }
+    if (c=='\n') {
     newline:
 	yPos++;
 	xPos=0;
 	if (yPos==VGA_LINES) {
 	    memcpy((xm_u8_t *) buffer, (xm_u8_t *) &buffer [VGA_COLUMNS * 2], (VGA_LINES - 1) * VGA_COLUMNS * 2);
-      
+
 	    for (pos = 0; pos < VGA_COLUMNS; pos ++)
 		((xm_u16_t *) buffer)[pos+(VGA_LINES-1)*VGA_COLUMNS]=(VGA_ATTR << 8);
 	    yPos--;
 	}
-    
+
 	VgaSetCursorPos((xPos+yPos*VGA_COLUMNS));
 	//HwRestoreFlags(hwFlags);
 	return;
     }
-  
+
     buffer[(xPos+yPos*VGA_COLUMNS)*2]=c&0xFF;
     buffer[(xPos+yPos*VGA_COLUMNS)*2+1]=VGA_ATTR;
 
     xPos++;
     if (xPos>=VGA_COLUMNS)
 	goto newline;
-  
+
     VgaSetCursorPos(xPos+yPos*VGA_COLUMNS);
     //  HwRestoreFlags(hwFlags);
 }

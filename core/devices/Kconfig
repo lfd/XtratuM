@@ -9,6 +9,11 @@ config DEV_PC_UART
        bool "Enable UART support"
        depends on PC_BOARD
        default y
+       
+config DEV_WB_GPIO
+       bool "Enable Winbond GPIO support"
+       depends on PC_BOARD
+       default n 
 
 config DEV_MEMBLOCK
        def_bool y

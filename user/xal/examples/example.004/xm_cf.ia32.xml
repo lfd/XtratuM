@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<SystemDescription xmlns="http://www.xtratum.org/xm-2.3" version="1.0.0" name="channels">
+    <XMHypervisor console="PcUart" loadPhysAddr="0x100000">
+        <PhysicalMemoryAreas>
+            <Area start="0x100000" size="3MB" />
+        </PhysicalMemoryAreas>
+        <HwDescription>
+            <Processor id="0">
+                <Sched>
+                    <CyclicPlanTable>
+                        <Plan id="0" majorFrame="1500ms">
+                        <Slot id="0" start="0ms" duration="500ms" partitionId="0" />
+                        <Slot id="1" start="500ms" duration="500ms" partitionId="1" />
+                        <Slot id="2" start="1000ms" duration="500ms" partitionId="2" />
+                    </Plan>
+                    </CyclicPlanTable>
+                </Sched>
+            </Processor>
+            <MemoryLayout>
+                <Region type="ram" start="0x0" size="128MB" />
+            </MemoryLayout>
+        </HwDescription>
+    </XMHypervisor>
+
+    <PartitionTable>
+        <Partition id="0" name="Partition1" processor="0" flags="boot" loadPhysAddr="0x2000000" headerOffset="0x0" imageId="0x0"
+            console="PcUart">
+            <PhysicalMemoryAreas>
+                <Area start="0x2000000" size="1MB" flags="mapped write" />
+            </PhysicalMemoryAreas>
+            <PortTable>
+                <Port type="queuing" direction="source" name="portQ"/>
+                <Port type="sampling" direction="source" name="portS"/>
+            </PortTable>
+        </Partition>
+        <Partition id="1" name="Partition2" processor="0" flags="boot" loadPhysAddr="0x2100000" headerOffset="0x0" imageId="0x1"
+            console="PcUart">
+            <PhysicalMemoryAreas>
+                <Area start="0x2100000" size="1MB" flags="mapped write" />
+                <Area start="0x2300000" size="1MB" flags="mapped write shared"/>
+            </PhysicalMemoryAreas>
+            <PortTable>
+                <Port type="sampling" direction="destination" name="portS"/>
+                <Port type="queuing" direction="destination" name="portQ"/>
+            </PortTable>
+        </Partition>
+        <Partition id="2" name="Partition3" processor="0" flags="boot" loadPhysAddr="0x2200000" headerOffset="0x0" imageId="0x2"
+            console="PcUart">
+            <PhysicalMemoryAreas>
+                <Area start="0x2200000" size="1MB" flags="mapped write" />
+                <Area start="0x2300000" size="1MB" flags="mapped write shared"/>
+            </PhysicalMemoryAreas>
+            <PortTable>
+                <Port type="sampling" direction="destination" name="portS"/>
+            </PortTable>
+        </Partition>
+    </PartitionTable>
+
+    <Devices>
+        <PcUart name="PcUart" />
+    </Devices>
+    
+    <Channels>
+        <QueuingChannel maxNoMessages="16" maxMessageLength="128B">
+            <Source partitionId="0" portName="portQ"/>
+            <Destination partitionId="1" portName="portQ"/>
+        </QueuingChannel>
+        <SamplingChannel maxMessageLength="128B">
+            <Source partitionId="0" portName="portS"/>
+            <Destination partitionId="1" portName="portS"/> 
+            <Destination partitionId="2" portName="portS"/> 
+        </SamplingChannel>
+    </Channels>
+</SystemDescription>
+

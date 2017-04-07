@@ -16,13 +16,11 @@ OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
 OUTPUT_ARCH("i386")
 ENTRY(_start)
 
-START_ADDR = CONFIG_LOAD_ADDR;
-
 SECTIONS
 {
-  . = START_ADDR;
+  . = CONFIG_LOAD_ADDR;
   _srorsw = .;
-  .text ALIGN (0x1000): {  	
+  .text ALIGN (0x1000): {
   	*(.text)
   }
 
@@ -31,15 +29,18 @@ SECTIONS
   	*(.rodata.*)
 	*(.rodata.*.*)
   }
+  _erodata = .;
 
+  . = CONFIG_CONTAINER_ADDR;
   .container ALIGN(4) : {
   	     xmefHeader = . ;
   	     *(.container)
   }
   _erorsw = .;
   _srsw = .;
+
   .data ALIGN (4) : AT ( ADDR (.container) + SIZEOF (.container)) {
-        _sdata = .;
+    _sdata = .;
 	_sdata_lma = LOADADDR(.data); 
 	*(.data)
 	_edata = .;
@@ -52,11 +53,13 @@ SECTIONS
        _ebss = .;
   }
 
-   _ersw = .;
+  _ersw = .;
 
   /DISCARD/ :
   {
 	*(.note)
 	*(.comment*)
   }
+
+  . = ASSERT( (_erodata < CONFIG_CONTAINER_ADDR), "Error: Resident_SW overlaps container: check CONFIG_CONTAINER_ADDR");
 }

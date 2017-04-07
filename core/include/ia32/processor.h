@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -82,7 +82,7 @@
 #define DEFAULT_CR0 0x80040033
 #define DEFAULT_CR4 0x90
 
-#endif
+#endif /*_XM_KERNEL_*/
 
 #ifndef __ASSEMBLY__
 
@@ -197,15 +197,43 @@ extern pseudoDesc_t xmGdtDesc, xmIdtDesc;
     __asm__ __volatile__ ("movl %0, %%cr2\n\t" : : "r" (cr2));	\
 } while(0)
 
-/*
-  #define SaveCr3(cr3) do { \
-  __asm__ __volatile__ ("movl %%cr3, %0\n\t" : "=r" (cr3)); \
-  } while(0)
+#define SaveCr3(cr3) do { \
+        __asm__ __volatile__ ("movl %%cr3, %0\n\t" : "=r" (cr3)); \
+} while(0)
 
-  #define LoadCr3(cr3) do { \
-  __asm__ __volatile__ ("movl %0, %%cr3\n\t" : : "r" (cr3)); \
-  } while(0)
-*/
+#define LoadCr3(cr3) do { \
+        __asm__ __volatile__ ("movl %0, %%cr3\n\t" : : "r" (cr3)); \
+} while(0)
+
+static inline void DisablePaging(void) {
+    xm_u32_t cr0;
+    SaveCr0(cr0);
+    cr0 &= ~CR0_PG;
+    LoadCr0(cr0);
+}
+
+static inline void EnablePaging(void) {
+    xm_u32_t cr0;
+    SaveCr0(cr0);
+    cr0 &= ~CR0_PG;
+    LoadCr0(cr0);
+}
+
+static inline xmAddress_t PageTranslate(xmAddress_t vaddr) {
+    xmAddress_t *pgd, *pgt, val;
+
+    SaveCr3(pgd);
+    pgt=(xmAddress_t *)pgd[VA2Pgd(vaddr)];
+    if (!((xmAddress_t)pgt&_PG_PRESENT))
+        return 0;
+    if ((xmAddress_t)pgt&_PG_PSE)
+        return ((xmAddress_t)pgt&PGD_MASK)|(vaddr&(~PGD_MASK));
+    val = pgt[VA2Pgt(vaddr)]&PAGE_MASK;
+    if (!(val&_PG_PRESENT))
+        return 0;
+
+    return (val&PAGE_MASK)|(vaddr&(PAGE_SIZE-1));
+}
 
 #define SaveCr4(cr4) do {  \
     __asm__ __volatile__ ("movl %%cr4, %0\n\t" : "=r" (cr4));	\
@@ -228,6 +256,14 @@ static inline xm_u32_t GetCpuIdEbx(xm_u32_t op) {
     __asm__ __volatile__ ("cpuid\n\t" : "=a" (eax), "=b" (ebx) \
 			  : "0" (op) : "cx", "dx");
     return ebx;
+}
+
+static inline xm_u32_t GetCpuIdEcx(xm_u32_t op) {
+    xm_u32_t eax, ecx;
+
+    __asm__ __volatile__ ("cpuid\n\t" : "=a" (eax), "=c" (ecx) \
+			  : "0" (op) : "bx", "dx");
+    return ecx;
 }
 
 static inline xm_u32_t GetCpuIdEdx(xm_u32_t op) {
@@ -369,7 +405,15 @@ static inline xm_u32_t GetCpuIdEdx(xm_u32_t op) {
 
 #define DoNop() __asm__ __volatile__ ("nop\n\t" ::)
 
-#endif
+static inline void Monitor(const void *eax, xm_u32_t ecx, xm_u32_t edx) {
+    __asm__ __volatile__(".byte 0x0f, 0x01, 0xc8\n\t" : : "a" (eax), "c" (ecx), "d" (edx));
+}
+
+#define MWAIT_CSTATE(C) ((C)<<4)
+static inline void Mwait(xm_u32_t eax, xm_u32_t ecx) {
+    __asm__ __volatile__(".byte 0x0f, 0x01, 0xc9;" : : "a" (eax), "c" (ecx));
+}
+
 
 /* Structure used to perform a ljmp or a lcall */
 typedef struct {
@@ -409,6 +453,6 @@ static inline xm_s32_t HwIsSti(void) {
 #define GET_CPU_ID() 0
 #define GET_CPU_HWID() 0
 
-#endif
-
-#endif
+#endif /*_XM_KERNEL_*/
+#endif /*__ASSEMBLY__*/
+#endif /*_ARCH_XM_PROCESSOR_H_*/

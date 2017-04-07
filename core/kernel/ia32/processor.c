@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -25,42 +25,67 @@
 
 /* flags returned the first time CPUID is called */
 xm_u32_t earlyFFlags __VBOOTDATA=0;
-gdtDesc_t xmGdt[(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES)*CONFIG_NO_CPUS];
-ioTss_t xmTss[CONFIG_NO_CPUS];
+gdtDesc_t xmGdt[(CONFIG_PARTITION_NO_GDT_ENTRIES+XM_GDT_ENTRIES)];
+ioTss_t xmTss;
+void (*Idle)(void);
 
-typedef struct {
-  xm_u32_t id; // logical ID
-  xm_u32_t hwId; // HW ID
-} localId_t;
+#define PIT_CH2             0x42
+#define PIT_MODE            0x43
+#define CALIBRATE_CYCLES    14551
+#define CALIBRATE_MULT      82
 
-static localId_t localIdTab[CONFIG_NO_CPUS];
-
-#define PIT_CH2             	0x42
-#define PIT_MODE                0x43
-#define PIT_CALIBRATE_CYCLES    14551
-#define PIT_CLOCKFREQ	    	1193182
-#define PIT_CALIBRATE_MULT		(PIT_CLOCKFREQ/PIT_CALIBRATE_CYCLES)
-
-__VBOOT static xm_u32_t CalibrateTscFreq(void) {
-    xm_u64_t cStart, cStop;
+__VBOOT xm_u32_t CalculateCpuFreq(void) {
+    xm_u64_t start, stop, delta;
 
     OutB((InB(0x61) & ~0x02) | 0x01, 0x61);
     OutB(0xb0, PIT_MODE);
-    OutB(PIT_CALIBRATE_CYCLES & 0xff, PIT_CH2);
-    OutB(PIT_CALIBRATE_CYCLES >> 8, PIT_CH2);
-    RdTscLL(cStart);
-    while ((InB(0x61) & 0x20) == 0);
-    RdTscLL(cStop);
+    OutB(CALIBRATE_CYCLES & 0xff, PIT_CH2);
+    OutB(CALIBRATE_CYCLES >> 8, PIT_CH2);
+    RdTscLL(start);
 
-    return (cStop-cStart)*PIT_CALIBRATE_MULT;
+    RdTscLL(delta);
+    InB(0x61);
+    RdTscLL(stop);
+    delta = stop-delta;
+
+    while ((InB(0x61) & 0x20) == 0);
+    RdTscLL(stop);
+
+    return ((stop-delta)-start)*CALIBRATE_MULT;
 }
 
 xm_u32_t GetCpuKhz(void){
     xm_u32_t cpuKhz=xmcTab.hpv.cpuTab[GET_CPU_ID()].freq;
     if (cpuKhz==XM_CPUFREQ_AUTO)
-        cpuKhz = CalibrateTscFreq()/1000;
+        cpuKhz = CalculateCpuFreq()/1000;
 	
     return cpuKhz;
+}
+
+static void NopIdle(void) {
+    __asm__ __volatile__ ("nop\n\t" ::);
+}
+
+static void MwaitIdle(void) {
+    extern xm_u32_t triggerStore;
+    triggerStore=0;
+    if (!triggerStore) {
+        Monitor(&triggerStore, 0, 0);
+        if (!triggerStore) {
+            Mwait(MWAIT_CSTATE(CONFIG_IDLE_C_STATE), 0);
+        }
+    }
+}
+
+void __VBOOT SetupIdle(void) {
+#define _CPUID_MWAIT (1<<3)
+    if (GetCpuIdEcx(1)&_CPUID_MWAIT) {
+        Idle=MwaitIdle;
+        kprintf("MWAIT idle selected\n");
+    } else {
+        Idle=NopIdle;
+        kprintf("NOP idle selected\n");
+    }
 }
 
 void __VBOOT SetupCpu(void) {
@@ -68,48 +93,28 @@ void __VBOOT SetupCpu(void) {
     xm_u16_t ldtSel=0;
     pseudoDesc_t gdtDesc;
 
-    xmTss[GET_CPU_ID()].t.ioBitmapOffset=TSS_IO_MAP_DISABLED;
+    SetupIdle();
 
-    memcpy(&xmGdt[Entry2XmGdtEntry(XM_CS>>3)], &earlyXmGdt[EARLY_XM_CS>>3], sizeof(gdtDesc_t));
-    memcpy(&xmGdt[Entry2XmGdtEntry(XM_DS>>3)], &earlyXmGdt[EARLY_XM_DS>>3], sizeof(gdtDesc_t));
+    xmTss.t.ioBitmapOffset=TSS_IO_MAP_DISABLED;
+
+    memcpy(&xmGdt[(XM_CS>>3)], &earlyXmGdt[EARLY_XM_CS>>3], sizeof(gdtDesc_t));
+    memcpy(&xmGdt[(XM_DS>>3)], &earlyXmGdt[EARLY_XM_DS>>3], sizeof(gdtDesc_t));
     
-    xmGdt[Entry2XmGdtEntry(GUEST_CS>>3)].gDesc.high=((XM_OFFSET>>12)-1)&0xffff;
-    xmGdt[Entry2XmGdtEntry(GUEST_CS>>3)].gDesc.low=(0x00c0bb00|(((XM_OFFSET>>12)-1)&0xf0000));
-    xmGdt[Entry2XmGdtEntry(GUEST_DS>>3)].gDesc.high=((XM_OFFSET>>12)-1)&0xffff;
-    xmGdt[Entry2XmGdtEntry(GUEST_DS>>3)].gDesc.low=(0x00c0b300|(((XM_OFFSET>>12)-1)&0xf0000));
-        
-    xmGdt[Entry2XmGdtEntry(PERCPU_SEL>>3)].desc=(desc_t) {
-	.limitLow=0xFFFF,
-	.baseLow=((xm_u32_t)&localIdTab[GET_CPU_ID()]&0xFFFF),
-	.baseMed=(((xm_u32_t)&localIdTab[GET_CPU_ID()]>>16)&0xFF),
-	.access=0x93,
-	.limitHigh=0xF,
-	.granularity=0xC,
-	.baseHigh=(((xm_u32_t)&localIdTab[GET_CPU_ID()]>>24)&0xFF),
-    };
+    xmGdt[(GUEST_CS>>3)].gDesc.high=((XM_OFFSET>>12)-1)&0xffff;
+    xmGdt[(GUEST_CS>>3)].gDesc.low=(0x00c0bb00|(((XM_OFFSET>>12)-1)&0xf0000));
+    xmGdt[(GUEST_DS>>3)].gDesc.high=((XM_OFFSET>>12)-1)&0xffff;
+    xmGdt[(GUEST_DS>>3)].gDesc.low=(0x00c0b300|(((XM_OFFSET>>12)-1)&0xf0000));
     
-    HwSetCallGate(&xmGdt[Entry2XmGdtEntry(0)], XM_HYPERCALL_CALLGATE_SEL, HypercallHandler, 2, 1, XM_CS);
-    
-    xmGdt[Entry2XmGdtEntry(TSS_SEL>>3)].desc=(desc_t) {
-	.limitLow=(0xFFFF&(sizeof(ioTss_t)-1)),
-	.baseLow=((xm_u32_t)&xmTss[GET_CPU_ID()]&0xFFFF),
-	.baseMed=(((xm_u32_t)&xmTss[GET_CPU_ID()]>>16)&0xFF),
-	.access=0x89,
-	.limitHigh=((sizeof(ioTss_t)-1)&0xF0000)>>16,
-	.granularity=0,
-	.baseHigh=(((xm_u32_t)&xmTss[GET_CPU_ID()]>>24)&0xFF),
-    };
+    HwSetCallGate(xmGdt, XM_HYPERCALL_CALLGATE_SEL, HypercallHandler, 2, 1, XM_CS);
 
     gdtDesc=(pseudoDesc_t) {
 	.limit=(sizeof(gdtDesc_t)*(XM_GDT_ENTRIES+CONFIG_PARTITION_NO_GDT_ENTRIES))-1,
-	.linearBase=(xm_u32_t)&xmGdt[Entry2XmGdtEntry(0)],
+	.linearBase=(xm_u32_t)xmGdt,
     };
 
     LoadGdt(gdtDesc);
     LoadSegSel(XM_CS, XM_DS);
     LoadLdt(ldtSel);
-    LoadGs(PERCPU_SEL);
-    LoadTr(TSS_SEL);
 }
 
 void __VBOOT EarlySetupCpu(void) {
@@ -132,15 +137,6 @@ void __VBOOT EarlySetupCpu(void) {
     memcpy(&xmGdt[XM_CS>>3], &earlyXmGdt[EARLY_XM_CS>>3], sizeof(gdtDesc_t));
     memcpy(&xmGdt[XM_DS>>3], &earlyXmGdt[EARLY_XM_DS>>3], sizeof(gdtDesc_t));
 
-    xmGdt[PERCPU_SEL>>3].desc=(desc_t) {
-	.limitLow=0xFFFF,
-	.baseLow=((xm_u32_t)&localIdTab[0]&0xFFFF),
-	.baseMed=(((xm_u32_t)&localIdTab[0]>>16)&0xFF),
-	.access=0x93,
-	.limitHigh=0xF,
-	.granularity=0xC,
-	.baseHigh=(((xm_u32_t)&localIdTab[0]>>24)&0xFF),
-    };
     gdtDesc=(pseudoDesc_t) {
 	.limit=(sizeof(gdtDesc_t)*(XM_GDT_ENTRIES+CONFIG_PARTITION_NO_GDT_ENTRIES))-1,
 	.linearBase=(xm_u32_t)xmGdt,
@@ -263,14 +259,10 @@ static xm_s32_t WriteTss(hypercallCtxt_t *ctxt, tss_t *__gParam t) {
 
     if (t->esp2>=CONFIG_XM_OFFSET) return XM_INVALID_PARAM;
 
-    sched->cKThread->ctrl.g->kArch.tss.ss1=t->ss1;
-    xmTss[GET_CPU_ID()].t.ss1=t->ss1;
-    sched->cKThread->ctrl.g->kArch.tss.esp1=t->esp1;
-    xmTss[GET_CPU_ID()].t.esp1=t->esp1;
-    sched->cKThread->ctrl.g->kArch.tss.ss2=t->ss2;
-    xmTss[GET_CPU_ID()].t.ss2=t->ss2;
-    sched->cKThread->ctrl.g->kArch.tss.esp2=t->esp2;
-    xmTss[GET_CPU_ID()].t.esp2=t->esp2;
+    sched->cKThread->ctrl.g->kArch.tss.t.ss1=t->ss1;
+    sched->cKThread->ctrl.g->kArch.tss.t.esp1=t->esp1;
+    sched->cKThread->ctrl.g->kArch.tss.t.ss2=t->ss2;
+    sched->cKThread->ctrl.g->kArch.tss.t.esp2=t->esp2;
 
     return XM_OK;
 }
@@ -359,10 +351,9 @@ static xm_s32_t Ia32UpdateSsEsp1(hypercallCtxt_t *ctxt, xm_u32_t ss1, xm_u32_t e
 
     if (esp1>=CONFIG_XM_OFFSET) return XM_INVALID_PARAM;
 
-    sched->cKThread->ctrl.g->kArch.tss.ss1=ss1;
-    xmTss[GET_CPU_ID()].t.ss1=ss1;
-    sched->cKThread->ctrl.g->kArch.tss.esp1=esp1;
-    xmTss[GET_CPU_ID()].t.esp1=esp1;
+    sched->cKThread->ctrl.g->kArch.tss.t.ss1=ss1;
+    sched->cKThread->ctrl.g->kArch.tss.t.esp1=esp1;
+
     return XM_OK;
 }
 
@@ -373,10 +364,9 @@ static xm_s32_t Ia32UpdateSsEsp2(hypercallCtxt_t *ctxt, xm_u32_t ss2, xm_u32_t e
 
     if (esp2>=CONFIG_XM_OFFSET) return XM_INVALID_PARAM;
 
-    sched->cKThread->ctrl.g->kArch.tss.ss2=ss2;
-    xmTss[GET_CPU_ID()].t.ss2=ss2;
-    sched->cKThread->ctrl.g->kArch.tss.esp2=esp2;
-    xmTss[GET_CPU_ID()].t.esp2=esp2;
+    sched->cKThread->ctrl.g->kArch.tss.t.ss2=ss2;
+    sched->cKThread->ctrl.g->kArch.tss.t.esp2=esp2;
+
     return XM_OK;
 }
 

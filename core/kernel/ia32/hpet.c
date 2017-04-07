@@ -5,10 +5,10 @@
  *
  * $VERSION: 1.0
  *
- * Author: Jordi Sánchez, <jsanchez@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -115,7 +115,7 @@ static xm_s32_t InitHpetTimer(void) {
 
     // Check if we have mapped correctly the timer page
     if ((HPET_GCID_VID & hpetReadReg(HPET_GCID)) != HPET_VENDOR_ID(CONFIG_HPET_VENDOR_ID)) {
-        PWARN("Bad HPET Vendor ID: %x\n", (HPET_GCID_VID & hpetReadReg(HPET_GCID)));
+        kprintf("Bad HPET Vendor ID: %x\n", (HPET_GCID_VID & hpetReadReg(HPET_GCID)));
         return -1;
     }
     kprintf("HPET mapped to address %x\n", hpetVirtAddr);
@@ -125,7 +125,7 @@ static xm_s32_t InitHpetTimer(void) {
     cfg = HPET_TnCC_IR(HPET_IRQ_NR) | HPET_TnCC_IE | HPET_TnCC_T32M;
     hpetWriteReg(HPET_T0CC, cfg);
     if ((hpetReadReg(HPET_T0CC) & HPET_TnCC_IMASK) != HPET_TnCC_IR(HPET_IRQ_NR)) {
-        PWARN("HPET interrupt not routed\n");
+        kprintf("HPET interrupt not routed\n");
         return -1;
     }
 

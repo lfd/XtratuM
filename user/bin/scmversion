@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# $Description: Provide XM scm version to identify builds.
+# Created by speiro <speiro@ai2.upv.es>
+# $Id: scmversion, 2012/09/10.
+# $License: Read LICENSE.txt file for the license terms.
+#
+
+quiet() {
+    $* >/dev/null 2>&1
+    return $?
+}
+
+XTRATUM_SCMVERSION=-1
+if quiet svn info; then
+    XTRATUM_SCMVERSION=`svn info | awk '/Revision:/ {gsub("Revision: ",""); print $1;}'`
+fi
+
+if quiet git log -1; then
+    XTRATUM_SCMVERSION=`git log -1 | awk '/git-svn-id/ {gsub(".*@", "", $0); print $1}'`
+fi
+
+echo "export XTRATUM_SCMVERSION=$XTRATUM_SCMVERSION"

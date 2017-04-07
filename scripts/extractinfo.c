@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -36,7 +36,7 @@
 "/*\n" \
 " * $VERSION$\n" \
 " *\n" \
-" * Author: Miguel Masmano <mmasmano@ai2.upv.es>\n" \
+" * $AUTHOR$\n" \
 " */\n\n" \
 "#ifndef _XM_INFO_H_\n\n" \
 "#define _XM_INFO_H_\n\n"
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 	exit(-1);
     }
 
-    sprintf(cmd, OBJCOPY" -O binary -j .rsv_hwirqs %s "TMPFILE, argv[1]);
+    sprintf(cmd, TARGET_OBJCOPY" -O binary -j .rsv_hwirqs %s "TMPFILE, argv[1]);
     if (WEXITSTATUS(system(cmd))) {
 	fprintf(stderr, USAGE);
 	exit(-1);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     }    
     fprintf(stderr, "};\n\n");
     fprintf(stderr, "xm_s32_t noRsvHwIrqs=%d;\n\n", noElem);
-    sprintf(cmd, OBJCOPY" -O binary -j .rsv_ioports %s "TMPFILE, argv[1]);
+    sprintf(cmd, TARGET_OBJCOPY" -O binary -j .rsv_ioports %s "TMPFILE, argv[1]);
     if (WEXITSTATUS(system(cmd))) {
 	fprintf(stderr, USAGE);
 	exit(-1);
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "};\n\n");
     fprintf(stderr, "xm_s32_t noRsvIoPorts=%d;\n\n", noElem);
 
-    sprintf(cmd, OBJCOPY" -O binary -j .rsv_physpages %s "TMPFILE, argv[1]);
+    sprintf(cmd, TARGET_OBJCOPY" -O binary -j .rsv_physpages %s "TMPFILE, argv[1]);
     if (WEXITSTATUS(system(cmd))) {
 	fprintf(stderr, USAGE);
 	exit(-1);

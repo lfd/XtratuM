@@ -5,10 +5,10 @@
  *
  * $VERSION$
  *
- * Author: Miguel Masmano <mmasmano@ai2.upv.es>
+ * $AUTHOR$
  *
  * $LICENSE:
- * (c) Universidad Politecnica de Valencia. All rights reserved.
+ * COPYRIGHT (c) Fent Innovative Software Solutions S.L.
  *     Read LICENSE.txt file for the license.terms.
  */
 
@@ -130,13 +130,21 @@ xm_u32_t SetupPartitionPgd(kThread_t *k, struct xmPartitionHdr *xmgHdr) {
 void SetupVmMap(void) {
     xm_u32_t fFlags=GetCpuIdEdx(1);
     xm_s32_t e;
+    xmAddress_t end, page;
+
+    end=xmcPhysMemAreaTab[xmcTab.hpv.physicalMemoryAreasOffset].size-1;
     if (CpuHasPse(fFlags)) {
+        for (page=XMPHYS2VIRT(0); page<XMPHYS2VIRT(end); page+=PSE_PAGE_SIZE) {
+            xmPgd[VA2Pgd(page)]=(XMVIRT2PHYS(page)&PGD_MASK)|_PG_PRESENT|_PG_PSE|_PG_RW|_PG_GLOBAL;
+        }
+#if 0
         // XM is mapped by using a 4MB page, improving the performance of
         // the TLB
         xmPgd[XM_PGD_START]=(_PG_PRESENT|_PG_PSE|_PG_RW|_PG_GLOBAL);
         if (xmcPhysMemAreaTab[xmcTab.hpv.physicalMemoryAreasOffset].size > PSE_PAGE_SIZE) {
             xmPgd[(PSE_PAGE_SIZE+XM_OFFSET)>>PGDIR_SHIFT]=(_PG_PRESENT|_PG_PSE|_PG_RW|_PG_GLOBAL);
         }
+#endif
     } else {
         if (xmcPhysMemAreaTab[xmcTab.hpv.physicalMemoryAreasOffset].size > (PAGE_SIZE*PDT_ENTRIES)) {
             xmPgd[(PAGE_SIZE*PDT_ENTRIES)>>PGDIR_SHIFT]=_PG_PRESENT|_PG_RW|XMVIRT2PHYS(xmPgt);
